@@ -31,3 +31,5 @@ node_modules/
 
 # mise vscode extension
 .vscode/mise-tools/
+
+/kustomization.yaml

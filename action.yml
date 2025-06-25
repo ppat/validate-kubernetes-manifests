@@ -1,0 +1,107 @@
+---
+# yamllint disable rule:line-length
+name: Validate Kubernetes Manifests
+description: Filter changed files → validate kustomize/kubeconform using Flux CRD schemas
+author: homelab-ops@homelab-ops.com
+
+inputs:
+  flux-version:
+    description: Flux v2 version (e.g. 2.6.2)
+    required: false
+    # renovate: datasource=github-releases depName=fluxcd/flux2
+    default: "v2.6.2"
+  files:
+    description: JSON array of file paths to inspect
+    required: false
+    default: '[]'
+  pkg-include:
+    description: JSON array of glob prefixes to include pkg-dirs (default ["."])
+    required: false
+    default: '["."]'
+  pkg-exclude:
+    description: JSON array of glob prefixes to exclude pkg-dirs (default [])
+    required: false
+    default: '[]'
+  kubeconform-flags:
+    description: Flags to pass to kubeconform
+    required: false
+    default: '-skip=Secret'
+  kustomize-flags:
+    description: Flags to pass to kustomize
+    required: false
+    default: '--load-restrictor=LoadRestrictionsNone'
+  env-file:
+    description: Optional env-file for post-build envsubst
+    required: false
+    default: ''
+  base-kustomization-file:
+    description: Optional base kustomization.yaml for post-build
+    required: false
+    default: ''
+  debug:
+    description: Print debug info when true
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+  - name: Cache Flux Schemas
+    if: inputs.files != '[]'
+    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+    with:
+      path: ~/.cache/flux-crd-schemas
+      key: flux-schemas-${{ inputs.flux-version }}
+
+  - name: Install Dependencies
+    if: inputs.files != '[]'
+    env:
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      kubeconform_version: "v0.7.0"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
+      kustomize_version: "v5.6.0"
+      # renovate: datasource=github-releases depName=fluxcd/flux2
+      flux_version: "v2.6.2"
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      echo "::group::install-dependencies"
+      echo "Install kubeconform ${kubeconform_version}..."
+      wget --progress=dot:giga -O kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/${kubeconform_version}/kubeconform-linux-amd64.tar.gz
+      tar -xzf kubeconform.tar.gz && sudo mv kubeconform /usr/local/bin/
+
+      echo "Install kustomize ${kustomize_version}..."
+      wget --progress=dot:giga -O kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz
+      tar -xzf kustomize.tar.gz && sudo mv kustomize /usr/local/bin/
+
+      echo "Install flux ${flux_version}..."
+      wget --progress=dot:giga -O flux.tar.gz https://github.com/fluxcd/flux2/releases/download/${flux_version}/flux_${flux_version#v}_linux_amd64.tar.gz
+      tar -xzf flux.tar.gz && sudo mv flux /usr/local/bin/
+      echo "::endgroup::"
+
+  - name: Run validation
+    if: inputs.files != '[]'
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      echo "::group::cli-versions"
+      echo "Checking CLI versions..."
+      echo
+      kustomize version
+      kubeconform -v
+      flux -v
+      echo "::endgroup::"
+      echo
+
+      mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
+      bin/validate-k8s.sh \
+        --github-mode \
+        --flux-version "${{ inputs.flux-version }}" \
+        --pkg-include '${{ inputs.pkg-include }}' \
+        --pkg-exclude '${{ inputs.pkg-exclude }}' \
+        --kubeconform-flags "${{ inputs.kubeconform-flags }}" \
+        --kustomize-flags "${{ inputs.kustomize-flags }}" \
+        $( [[ -n "${{ inputs.env-file }}" ]] && echo "--env-file ${{ inputs.env-file }}" ) \
+        $( [[ -n "${{ inputs.base-kustomization-file }}" ]] && echo "--base-kustomization-file ${{ inputs.base-kustomization-file }}" ) \
+        $( [[ "${{ inputs.debug }}" == 'true' ]] && echo "--debug" ) \
+        "${FILES[@]}"
