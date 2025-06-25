@@ -9,6 +9,8 @@ on:
     - 'ci/test-data/*'
     - 'ci/validation/*'
     - 'action.yml'
+  schedule:
+  - cron: '0 5 * * 1'
 
 jobs:
   test-validation:

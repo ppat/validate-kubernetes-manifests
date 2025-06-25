@@ -69,6 +69,7 @@ set -- "${POSITIONAL[@]}"
 
 # After parsing positional arguments and before "Require at least one file"
 FILES=("$@")
+echo "${FILES[@]}"
 
 # Check if single argument is "." and replace with found kustomization.yaml files
 if [[ ${#FILES[@]} -eq 1 && "${FILES[0]}" == "." ]]; then
@@ -115,7 +116,11 @@ for f in "${PRE_FILES[@]}"; do
   PKG_DIRS+=("$dir")
 done
 # dedupe
-readarray -t PKG_DIRS < <(printf '%s\n' "${PKG_DIRS[@]}" | sort -u)
+if (( ${#PKG_DIRS[@]} > 0 )); then
+  readarray -t PKG_DIRS < <(printf '%s\n' "${PKG_DIRS[@]}" | sort -u)
+else
+  PKG_DIRS=()
+fi
 
 # Schema cache paths
 FLUX_SCHEMA_DIR="${HOME}/.cache/flux-crd-schemas/master-standalone-strict"
