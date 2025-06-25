@@ -142,18 +142,15 @@ fetch_schemas() {
 }
 
 validate_pre() {
-  echo "🧪 Pre-build validation (kustomization files only)..."
   base_flags=( -strict -ignore-missing-schemas -verbose )
   schema_flags=( -schema-location default -schema-location "$FLUX_SCHEMA_PARENT" -schema-location "$DATREE_SCHEMA_LOCATION" )
   for file in "${PRE_FILES[@]}"; do
     [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
     kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "$file" 2>&1 | sed -E 's|^(.*)|    \1|g'
   done
-  echo "✅ Pre-build OK"
 }
 
 validate_post() {
-  echo "🧪 Post-build validation (resources packaged within each kustomization)..."
   base_flags=( -strict -ignore-missing-schemas -verbose )
   schema_flags=( -schema-location default -schema-location "$FLUX_SCHEMA_PARENT" -schema-location "$DATREE_SCHEMA_LOCATION" )
 
@@ -197,7 +194,6 @@ validate_post() {
     kustomize edit remove resource "$relative_path"
   done
   popd >/dev/null 2>&1
-  echo "✅ Post-build OK"
 }
 
 main() {
@@ -210,18 +206,22 @@ main() {
   fi
 
   if (( ${#PRE_FILES[@]} > 0 )); then
+    echo "🧪 Pre-build validation (kustomization files only)..."
     [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations"
     validate_pre
     [[ "$MODE" == "github" ]] && echo "::endgroup::"
+    echo "✅ Pre-build OK"
   else
     echo "⚠️  Skipping pre-build (no kustomization.yaml files)"
   fi
   echo
 
   if (( ${#PKG_DIRS[@]} > 0 )); then
+    echo "🧪 Post-build validation (resources packaged within each kustomization)..."
     [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
     validate_post
     [[ "$MODE" == "github" ]] && echo "::endgroup::"
+    echo "✅ Post-build OK"
   else
     echo "⚠️  Skipping post-build (no kustomization package dirs)"
   fi
