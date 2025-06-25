@@ -20,6 +20,7 @@ Options:
   --env-file FILE                Env file for post-build (default: none)
   --base-kustomization-file FILE Base kustomization.yaml for post-build (default: none)
   --debug                        Enable debug output
+  --github-mode                  Run in Github mode (specialized output when used as a github action)
   -h, --help                     Show this help and exit
 
 Example (pre-commit):
@@ -48,6 +49,7 @@ KUSTOMIZE_FLAGS="--load-restrictor=LoadRestrictionsNone"
 ENV_FILE=""
 BASE_KFILE=""
 DEBUG=false
+MODE='none'
 
 # Parse options
 POSITIONAL=()
@@ -60,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     --kustomize-flags)         KUSTOMIZE_FLAGS=$2;    shift 2;;
     --env-file)                ENV_FILE=$2;           shift 2;;
     --base-kustomization-file) BASE_KFILE=$2;         shift 2;;
+    --github-mode)             MODE='github';         shift;;
     --debug)                   DEBUG=true;            shift;;
     -h|--help)                 usage;;
     *)                         POSITIONAL+=("$1");    shift;;
@@ -198,19 +201,30 @@ validate_post() {
   echo "✅ Post-build OK"
 }
 
-# Execute
-if [[ ! -d "$FLUX_SCHEMA_DIR" || "$(find "$FLUX_SCHEMA_DIR" -type f -name '*.json' | wc -l)" -eq "0" ]]; then
-  fetch_schemas
-fi
-if (( ${#PRE_FILES[@]} > 0 )); then
-  validate_pre
-else
-  echo "⚠️  Skipping pre-build (no kustomization.yaml files)"
-fi
-echo
-if (( ${#PKG_DIRS[@]} > 0 )); then
-  validate_post
-else
-  echo "⚠️  Skipping post-build (no kustomization package dirs)"
-fi
-echo
+main() {
+  [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
+  if [[ ! -d "$FLUX_SCHEMA_DIR" || "$(find "$FLUX_SCHEMA_DIR" -type f -name '*.json' | wc -l)" -eq "0" ]]; then
+    fetch_schemas
+  fi
+  [[ "$MODE" == "github" ]] && echo "::endgroup::"
+
+  [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations"
+  if (( ${#PRE_FILES[@]} > 0 )); then
+    validate_pre
+  else
+    echo "⚠️  Skipping pre-build (no kustomization.yaml files)"
+  fi
+  [[ "$MODE" == "github" ]] && echo "::endgroup::"
+  echo
+
+  [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
+  if (( ${#PKG_DIRS[@]} > 0 )); then
+    validate_post
+  else
+    echo "⚠️  Skipping post-build (no kustomization package dirs)"
+  fi
+  [[ "$MODE" == "github" ]] && echo "::endgroup::"
+  echo
+}
+
+main

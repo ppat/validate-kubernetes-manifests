@@ -68,16 +68,13 @@ runs:
       # renovate: datasource=github-releases depName=fluxcd/flux2
       version: "v2.6.2"
 
-  - name: Ensure script is executable
-    shell: bash
-    run: chmod +x bin/validate-k8s.sh
-
   - name: Run validation
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
       mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
       bin/validate-k8s.sh \
+        --github-mode \
         --flux-version "${{ inputs.flux-version }}" \
         --pkg-include '${{ inputs.pkg-include }}' \
         --pkg-exclude '${{ inputs.pkg-exclude }}' \
