@@ -76,7 +76,7 @@ runs:
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
-      mapfile -t FILES < <(jq -r '.[]' <<< "${{ inputs.files }}")
+      mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
       bin/validate-k8s.sh \
         --flux-version "${{ inputs.flux-version }}" \
         --pkg-include '${{ inputs.pkg-include }}' \
