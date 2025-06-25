@@ -73,6 +73,15 @@ runs:
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
+      echo "::group::cli-versions"
+      echo "Checking CLI versions..."
+      aqua list --installed --all | column -type
+      echo
+      kustomize version
+      kubeconform -v
+      flux -v
+      echo "::endgroup::"
+
       mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
       bin/validate-k8s.sh \
         --github-mode \
