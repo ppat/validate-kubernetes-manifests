@@ -53,20 +53,30 @@ runs:
       path: ~/.cache/flux-crd-schemas
       key: flux-schemas-${{ inputs.flux-version }}
 
-  - name: Cache Aqua Packages
+  - name: Install Dependencies
     if: inputs.files != '[]'
-    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
-    with:
-      path: ~/.local/share/aquaproj-aqua
-      key: aqua-${{hashFiles('aqua.yaml')}}
-      restore-keys: |
-        aqua-
+    env:
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      kubeconform_version: "v0.7.0"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
+      kustomize_version: "v5.6.0"
+      # renovate: datasource=github-releases depName=fluxcd/flux2
+      flux_version: "v2.6.2"
+      shell: bash
+      run: |
+        echo "::group::install-dependencies"
+        # Install kubeconform
+        wget -O kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/${kubeconform_version}/kubeconform-linux-amd64.tar.gz
+        tar -xzf kubeconform.tar.gz && sudo mv kubeconform /usr/local/bin/
 
-  - name: Install Dependencies with Aqua
-    if: inputs.files != '[]'
-    uses: aquaproj/aqua-installer@v4.0.1
-    with:
-      aqua_version: v2.53.3
+        # Install kustomize
+        wget -O kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz
+        tar -xzf kustomize.tar.gz && sudo mv kustomize /usr/local/bin/
+
+        # Install flux
+        wget -O flux.tar.gz https://github.com/fluxcd/flux2/releases/download/${flux_version}/flux_${flux_version#v}_linux_amd64.tar.gz
+        tar -xzf flux.tar.gz && sudo mv flux /usr/local/bin/
+        echo "::endgroup::"
 
   - name: Run validation
     if: inputs.files != '[]'
@@ -75,12 +85,12 @@ runs:
     run: |
       echo "::group::cli-versions"
       echo "Checking CLI versions..."
-      aqua list --installed --all | column -t
       echo
       kustomize version
       kubeconform -v
       flux -v
       echo "::endgroup::"
+      echo
 
       mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
       bin/validate-k8s.sh \
