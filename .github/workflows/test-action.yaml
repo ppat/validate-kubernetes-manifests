@@ -19,7 +19,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Test with sample files
+    - name: Test
       uses: ./
       with:
         flux-version: '2.6.2'
