@@ -187,7 +187,7 @@ validate_post() {
     kustomize create
   fi
   for pkg_dir in "${PKG_DIRS[@]}"; do
-    echo "-> ${pkg_dir}:"
+    [[ "$MODE" == "github" ]] && echo "::group::resource-package ${pkg_dir}" || echo "-> ${pkg_dir}:"
     dir="${repo_dir}/${pkg_dir}"
     relative_path="../$(realpath --relative-to="$temp_dir" "$dir")"
     [[ -d "$relative_path" ]] || { echo "✖ Missing dir: $relative_path"; exit 1; }
@@ -196,6 +196,7 @@ validate_post() {
       | flux envsubst \
       | kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" 2>&1 | sed -E 's|^(.*)|      \1|g'
     kustomize edit remove resource "$relative_path"
+    [[ "$MODE" == "github" ]] && echo "::endgroup::"
   done
   popd >/dev/null 2>&1
   echo "✅ Post-build OK"
@@ -205,6 +206,8 @@ main() {
   [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
   if [[ ! -d "$FLUX_SCHEMA_DIR" || "$(find "$FLUX_SCHEMA_DIR" -type f -name '*.json' | wc -l)" -eq "0" ]]; then
     fetch_schemas
+  else
+    echo "Using cached schemas..."
   fi
   [[ "$MODE" == "github" ]] && echo "::endgroup::"
 
