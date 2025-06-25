@@ -75,7 +75,7 @@ runs:
     run: |
       echo "::group::cli-versions"
       echo "Checking CLI versions..."
-      aqua list --installed --all | column -type
+      aqua list --installed --all | column -t
       echo
       kustomize version
       kubeconform -v
