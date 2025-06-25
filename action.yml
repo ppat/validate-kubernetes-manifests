@@ -67,15 +67,15 @@ runs:
     run: |
       echo "::group::install-dependencies"
       echo "Install kubeconform ${kubeconform_version}..."
-      wget -O kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/${kubeconform_version}/kubeconform-linux-amd64.tar.gz
+      wget --progress=dot:giga -O kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/${kubeconform_version}/kubeconform-linux-amd64.tar.gz
       tar -xzf kubeconform.tar.gz && sudo mv kubeconform /usr/local/bin/
 
       echo "Install kustomize ${kustomize_version}..."
-      wget -O kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz
+      wget --progress=dot:giga -O kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz
       tar -xzf kustomize.tar.gz && sudo mv kustomize /usr/local/bin/
 
       echo "Install flux ${flux_version}..."
-      wget -O flux.tar.gz https://github.com/fluxcd/flux2/releases/download/${flux_version}/flux_${flux_version#v}_linux_amd64.tar.gz
+      wget --progress=dot:giga -O flux.tar.gz https://github.com/fluxcd/flux2/releases/download/${flux_version}/flux_${flux_version#v}_linux_amd64.tar.gz
       tar -xzf flux.tar.gz && sudo mv flux /usr/local/bin/
       echo "::endgroup::"
 
