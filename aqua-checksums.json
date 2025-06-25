@@ -1,0 +1,69 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/fluxcd/flux2/v2.6.2/flux_2.6.2_darwin_amd64.tar.gz",
+      "checksum": "32DF695EE691182FA40B63BA3069C65F13F636705BF650ACA979E66A0841CD9A",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/fluxcd/flux2/v2.6.2/flux_2.6.2_darwin_arm64.tar.gz",
+      "checksum": "6C3471A8ADAB99B5BCF5340EE30AFD400579E8A55AC97B50E734144C2B957BD8",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/fluxcd/flux2/v2.6.2/flux_2.6.2_linux_amd64.tar.gz",
+      "checksum": "38ADBF00DE552E0A0E87FA4B457D609BF2C35BB3EEE7EC9517EF2AB49BCE78C9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/fluxcd/flux2/v2.6.2/flux_2.6.2_linux_arm64.tar.gz",
+      "checksum": "56FA8DCE133FEA649F07F8B86562EC4E65A51F021BDEB42F7F5E4D7796277CC6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.6.0/kustomize_v5.6.0_darwin_amd64.tar.gz",
+      "checksum": "3432BE97F9FB4899148BF2485CCF9080E5E7702758EB16C92CD2F2F335E12A03",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.6.0/kustomize_v5.6.0_darwin_arm64.tar.gz",
+      "checksum": "791D9497D2973D4AF17C9C0C2B3991CE82E61D1A2BF79F4EF78DD9DCE25A6D3D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.6.0/kustomize_v5.6.0_linux_amd64.tar.gz",
+      "checksum": "54E4031DDC4E7FC59E408DA29E7C646E8E57B8088C51B84B3DF0864F47B5148F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.6.0/kustomize_v5.6.0_linux_arm64.tar.gz",
+      "checksum": "AD8AB62D4F6D59A8AFDA0EEC4BA2E5CD2F86BF1AFEEA4B78D06DAAC945EB0660",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/yannh/kubeconform/v0.7.0/kubeconform-darwin-amd64.tar.gz",
+      "checksum": "C6771CC894D82E1B12F35EE797DCDA1F7DA6A3787AA30902A15C264056DD40D4",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/yannh/kubeconform/v0.7.0/kubeconform-darwin-arm64.tar.gz",
+      "checksum": "B5D32B2CB77F9C781C976B20A85E2D0BC8F9184D5D1CFE665A2F31A19F99EEB9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/yannh/kubeconform/v0.7.0/kubeconform-linux-amd64.tar.gz",
+      "checksum": "C31518DDD122663B3F3AA874CFE8178CB0988DE944F29C74A0B9260920D115D3",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/yannh/kubeconform/v0.7.0/kubeconform-linux-arm64.tar.gz",
+      "checksum": "CC907CCF9E3C34523F0F32B69745265E0A6908CA85B92F41931D4537860EB83C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.380.0/registry.yaml",
+      "checksum": "549B249D9F83B0980F312F865EABEA997E2F54A200CFE5B24670E62771A336D9EB6A838E6EB1FBB9B5593C2679C76C954F8986BB2307CC522D51488C481DA1A7",
+      "algorithm": "sha512"
+    }
+  ]
+}

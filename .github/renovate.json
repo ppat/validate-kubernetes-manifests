@@ -18,7 +18,11 @@
     "mergeConfidence:all-badges",
     "github>ppat/renovate-presets",
     "github>ppat/renovate-presets:dev-tools",
-    "github>ppat/renovate-presets:github-actions"
+    "github>ppat/renovate-presets:github-actions",
+    "github>aquaproj/aqua-renovate-config#2.8.2",
+    "github>suzuki-shunsuke/renovate-config:yaml-language-server#3.2.1",
+    "github>ppat/validate-kubernetes-manifests//.github/renovate/aqua-cli-tools",
+    "github>ppat/validate-kubernetes-manifests//.github/renovate/aqua-registry"
   ],
   "internalChecksFilter": "strict",
   "labels": [

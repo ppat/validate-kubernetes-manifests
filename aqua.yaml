@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/v2.53.0/json-schema/aqua-yaml.json
+checksum:
+  enabled: true
+  require_checksum: true
+  supported_envs:
+  - darwin/amd64
+  - darwin/arm64
+  - linux/amd64
+  - linux/arm64
+registries:
+- type: standard
+  ref: v4.380.0 # renovate: depName=aquaproj/aqua-registry
+packages:
+- name: fluxcd/flux2@v2.6.2
+- name: kubernetes-sigs/kustomize@kustomize/v5.6.0
+- name: yannh/kubeconform@v0.7.0

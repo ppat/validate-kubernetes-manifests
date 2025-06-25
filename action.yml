@@ -7,7 +7,9 @@ author: homelab-ops@homelab-ops.com
 inputs:
   flux-version:
     description: Flux v2 version (e.g. 2.6.2)
-    required: true
+    required: false
+    # renovate: datasource=github-releases depName=fluxcd/flux2
+    default: "v2.6.2"
   files:
     description: JSON array of file paths to inspect
     required: false
@@ -44,31 +46,30 @@ inputs:
 runs:
   using: composite
   steps:
-  - name: Restore Flux schemas cache
-    uses: actions/cache@v4
+  - name: Cache Flux Schemas
+    if: inputs.files != '[]'
+    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
       path: ~/.cache/flux-crd-schemas
       key: flux-schemas-${{ inputs.flux-version }}
 
-  - name: Setup kubeconform
-    uses: fluxcd/pkg/actions/kubeconform@2a76f6a42e243acd63a9298b7746415a03b4758b
+  - name: Cache Aqua Packages
+    if: inputs.files != '[]'
+    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
-      # renovate: datasource=github-releases depName=yannh/kubeconform
-      version: "v0.7.0"
+      path: ~/.local/share/aquaproj-aqua
+      key: aqua-${{hashFiles('aqua.yaml')}}
+      restore-keys: |
+        aqua-
 
-  - name: Setup kustomize
-    uses: fluxcd/pkg/actions/kustomize@2a76f6a42e243acd63a9298b7746415a03b4758b
+  - name: Install Dependencies with Aqua
+    if: inputs.files != '[]'
+    uses: aquaproj/aqua-installer@v4.0.1
     with:
-      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
-      version: "v5.6.0"
-
-  - name: Setup flux
-    uses: fluxcd/flux2/action@a48f81a66c4ca9fbd993233ab99dd03a7cfbe09a # v2.6.2
-    with:
-      # renovate: datasource=github-releases depName=fluxcd/flux2
-      version: "v2.6.2"
+      aqua_version: v2.53.3
 
   - name: Run validation
+    if: inputs.files != '[]'
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
