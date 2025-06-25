@@ -72,7 +72,6 @@ set -- "${POSITIONAL[@]}"
 
 # After parsing positional arguments and before "Require at least one file"
 FILES=("$@")
-echo "${FILES[@]}"
 
 # Check if single argument is "." and replace with found kustomization.yaml files
 if [[ ${#FILES[@]} -eq 1 && "${FILES[0]}" == "." ]]; then
@@ -202,30 +201,30 @@ validate_post() {
 }
 
 main() {
-  [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
   if [[ ! -d "$FLUX_SCHEMA_DIR" || "$(find "$FLUX_SCHEMA_DIR" -type f -name '*.json' | wc -l)" -eq "0" ]]; then
+    [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
     fetch_schemas
+    [[ "$MODE" == "github" ]] && echo "::endgroup::"
   else
     echo "Using cached schemas..."
   fi
-  [[ "$MODE" == "github" ]] && echo "::endgroup::"
 
-  [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations"
   if (( ${#PRE_FILES[@]} > 0 )); then
+    [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations"
     validate_pre
+    [[ "$MODE" == "github" ]] && echo "::endgroup::"
   else
     echo "⚠️  Skipping pre-build (no kustomization.yaml files)"
   fi
-  [[ "$MODE" == "github" ]] && echo "::endgroup::"
   echo
 
-  [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
   if (( ${#PKG_DIRS[@]} > 0 )); then
+    [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
     validate_post
+    [[ "$MODE" == "github" ]] && echo "::endgroup::"
   else
     echo "⚠️  Skipping post-build (no kustomization package dirs)"
   fi
-  [[ "$MODE" == "github" ]] && echo "::endgroup::"
   echo
 }
 
