@@ -1,0 +1,28 @@
+---
+name: Test Action
+
+on:
+  pull_request:
+    paths:
+    - '.github/workflows/test-action.yaml'
+    - 'bin/validate-k8s.sh'
+    - 'ci/test-data/*'
+    - 'ci/validation/*'
+    - 'action.yml'
+
+jobs:
+  test-validation:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Test with sample files
+      uses: ./
+      with:
+        flux-version: '2.6.2'
+        files: '["ci/test-data/test-package/kustomization.yaml", "ci/test-data/kustomization.yaml"]'
+        pkg-include: '["ci/test-data/*"]'
+        pkg-exclude: '[]'
+        env-file: 'ci/validation/.env'
+        debug: 'true'

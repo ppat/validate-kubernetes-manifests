@@ -44,3 +44,18 @@ repos:
     - '@commitlint/ensure@19.5.0'
     - 'commitlint-plugin-function-rules@4.0.1'
     args: ['--verbose']
+- repo: local
+  hooks:
+  - id: validate-k8s
+    name: Validate Kubernetes manifests
+    entry: bin/validate-k8s.sh
+    language: system
+    pass_filenames: true
+    require_serial: true
+    files: '\.(ya?ml|yaml)$'
+    args:
+    - --pkg-include
+    - '["ci/test-data/*"]'
+    - --env-file
+    - ci/validation/.env
+    - --debug

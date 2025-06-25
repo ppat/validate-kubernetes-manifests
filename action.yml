@@ -1,0 +1,89 @@
+---
+# yamllint disable rule:line-length
+name: Validate Kubernetes Manifests
+description: Filter changed files → validate kustomize/kubeconform using Flux CRD schemas
+author: homelab-ops@homelab-ops.com
+
+inputs:
+  flux-version:
+    description: Flux v2 version (e.g. 2.6.2)
+    required: true
+  files:
+    description: JSON array of file paths to inspect
+    required: false
+    default: '[]'
+  pkg-include:
+    description: JSON array of glob prefixes to include pkg-dirs (default ["."])
+    required: false
+    default: '["."]'
+  pkg-exclude:
+    description: JSON array of glob prefixes to exclude pkg-dirs (default [])
+    required: false
+    default: '[]'
+  kubeconform-flags:
+    description: Flags to pass to kubeconform
+    required: false
+    default: '-skip=Secret'
+  kustomize-flags:
+    description: Flags to pass to kustomize
+    required: false
+    default: '--load-restrictor=LoadRestrictionsNone'
+  env-file:
+    description: Optional env-file for post-build envsubst
+    required: false
+    default: ''
+  base-kustomization-file:
+    description: Optional base kustomization.yaml for post-build
+    required: false
+    default: ''
+  debug:
+    description: Print debug info when true
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+  - name: Restore Flux schemas cache
+    uses: actions/cache@v4
+    with:
+      path: ~/.cache/flux-crd-schemas
+      key: flux-schemas-${{ inputs.flux-version }}
+
+  - name: Setup kubeconform
+    uses: fluxcd/pkg/actions/kubeconform@2a76f6a42e243acd63a9298b7746415a03b4758b
+    with:
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      version: "v0.7.0"
+
+  - name: Setup kustomize
+    uses: fluxcd/pkg/actions/kustomize@2a76f6a42e243acd63a9298b7746415a03b4758b
+    with:
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
+      version: "v5.6.0"
+
+  - name: Setup flux
+    uses: fluxcd/flux2/action@a48f81a66c4ca9fbd993233ab99dd03a7cfbe09a # v2.6.2
+    with:
+      # renovate: datasource=github-releases depName=fluxcd/flux2
+      version: "v2.6.2"
+
+  - name: Ensure script is executable
+    shell: bash
+    run: chmod +x bin/validate-k8s.sh
+
+  - name: Run validation
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      mapfile -t FILES < <(jq -r '.[]' <<< "${{ inputs.files }}")
+      bin/validate-k8s.sh \
+        --flux-version "${{ inputs.flux-version }}" \
+        --pkg-include '${{ inputs.pkg-include }}' \
+        --pkg-exclude '${{ inputs.pkg-exclude }}' \
+        --kubeconform-flags "${{ inputs.kubeconform-flags }}" \
+        --kustomize-flags "${{ inputs.kustomize-flags }}" \
+        $( [[ -n "${{ inputs.env-file }}" ]] && echo "--env-file ${{ inputs.env-file }}" ) \
+        $( [[ -n "${{ inputs.base-kustomization-file }}" ]] && echo "--base-kustomization-file ${{ inputs.base-kustomization-file }}" ) \
+        $( [[ "${{ inputs.debug }}" == 'true' ]] && echo "--debug" ) \
+        "${FILES[@]}"

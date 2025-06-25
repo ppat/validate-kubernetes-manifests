@@ -1,0 +1,10 @@
+# .pre-commit-hooks.yaml
+---
+- id: validate-k8s
+  name: Validate Kubernetes manifests
+  entry: bin/validate-k8s.sh
+  language: system
+  pass_filenames: true
+  stages:
+  - commit
+  files: '\.(ya?ml|yaml)$'
