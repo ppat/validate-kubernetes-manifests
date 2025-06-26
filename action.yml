@@ -94,7 +94,7 @@ runs:
       echo
 
       mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
-      ./validate-k8s.sh \
+      ${{ github.action_path }}/validate-k8s.sh \
         --github-mode \
         --flux-version "${{ inputs.flux-version }}" \
         --pkg-include '${{ inputs.pkg-include }}' \
