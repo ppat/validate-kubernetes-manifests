@@ -96,28 +96,36 @@ done
 
 # Derive package dirs from PRE_FILES
 PKG_DIRS=()
+PKG_DIRS=()
 for f in "${PRE_FILES[@]}"; do
   dir=$(dirname "$f")
+  # Remove leading ./ if present for consistent comparison
+  dir=${dir#./}
+
   match=false
   if (( ${#INCLUDES[@]} == 0 )); then
     match=true
   else
     for pat in "${INCLUDES[@]}"; do
-      [[ "$dir" == $pat* ]] && { match=true; break; }
+      # Remove trailing /* from pattern for directory matching
+      pattern=${pat%/*}
+      [[ "$dir" == $pattern* ]] && { match=true; break; }
     done
   fi
   $match || continue
+
   for pat in "${EXCLUDES[@]}"; do
-    [[ "$dir" == $pat* ]] && { match=false; break; }
+    # Remove trailing /* from pattern for directory matching
+    pattern=${pat%/*}
+    [[ "$dir" == $pattern* ]] && { match=false; break; }
   done
   $match || continue
   PKG_DIRS+=("$dir")
 done
-# dedupe
+
+# dedupe - only if PKG_DIRS has elements
 if (( ${#PKG_DIRS[@]} > 0 )); then
   readarray -t PKG_DIRS < <(printf '%s\n' "${PKG_DIRS[@]}" | sort -u)
-else
-  PKG_DIRS=()
 fi
 
 # Schema cache paths
