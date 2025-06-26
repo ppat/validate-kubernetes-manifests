@@ -5,6 +5,7 @@
   entry: bin/validate-k8s.sh
   language: system
   pass_filenames: true
+  require_serial: true
   stages:
-  - commit
+  - pre-commit
   files: '\.(ya?ml|yaml)$'
