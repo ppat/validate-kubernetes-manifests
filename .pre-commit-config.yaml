@@ -49,7 +49,7 @@ repos:
   - id: validate-k8s
     name: Validate Kubernetes manifests
     entry: validate-k8s.sh
-    language: system
+    language: script
     pass_filenames: true
     require_serial: true
     files: '\.(ya?ml|yaml)$'
