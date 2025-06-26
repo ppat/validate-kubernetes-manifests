@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/test-action.yaml'
-    - 'bin/validate-k8s.sh'
+    - 'validate-k8s.sh'
     - 'ci/test-data/*'
     - 'ci/validation/*'
     - 'action.yml'
