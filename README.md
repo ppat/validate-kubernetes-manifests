@@ -64,14 +64,15 @@ jobs:
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/ppat/validate-kubernetes-manifests
-    rev: v1
-    hooks:
-      - id: validate-k8s
-        args:
-          - --flux-version=2.6.2
-          - --pkg-include=["apps/*", "infrastructure/*"]
-          - --pkg-exclude=["components/*"]
+- repo: https://github.com/ppat/validate-kubernetes-manifests
+  rev: v0.0.0 # x-release-please-version
+  hooks:
+  - id: validate-k8s
+    args:
+    - --pkg-include
+    - '["apps/*","infrastructure/*"]'
+    - --pkg-exclude
+    - '["components/*"]'
 ```
 
 ## Configuration Options
