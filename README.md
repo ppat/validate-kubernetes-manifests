@@ -28,35 +28,34 @@ jobs:
     outputs:
       files: ${{ steps.prepare-files.outputs.files }}
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Get changed files
-        id: changed
-        uses: tj-actions/changed-files@v46
-        with:
-          files: '**/*.{yaml,yml}'
+    - name: Get changed files
+      id: changed
+      uses: tj-actions/changed-files@v46
+      with:
+        files: '**/*.{yaml,yml}'
 
-      - name: Prepare files JSON
-        id: prepare-files
-        run: |
-          ALL=(${{ steps.changed.outputs.all_changed_files }})
-          printf '%s\n' "${ALL[@]}" | jq -R . | jq -s -c . > files.json
-          echo "files=$(cat files.json)" >> $GITHUB_OUTPUT
+    - name: Prepare files JSON
+      id: prepare-files
+      run: |
+        ALL=(${{ steps.changed.outputs.all_changed_files }})
+        printf '%s\n' "${ALL[@]}" | jq -R . | jq -s -c . > files.json
+        echo "files=$(cat files.json)" >> $GITHUB_OUTPUT
 
   validate:
     needs: detect-changes
     if: needs.detect-changes.outputs.files != '[]'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Validate Kubernetes Manifests
-        uses: ppat/validate-kubernetes-manifests
-        with:
-          flux-version: '2.6.2'
-          files: ${{ needs.detect-changes.outputs.files }}
-          pkg-include: '["apps/*", "infrastructure/*"]'
-          pkg-exclude: '["components/*"]'
+    - name: Validate Kubernetes Manifests
+      uses: ppat/validate-kubernetes-manifests@v0.0.0 # x-release-please-version
+      with:
+        files: ${{ needs.detect-changes.outputs.files }}
+        pkg-include: '["apps/*", "infrastructure/*"]'
+        pkg-exclude: '["components/*"]'
 ```
 
 ### Pre-commit Hook Usage
