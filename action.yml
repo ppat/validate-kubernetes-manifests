@@ -5,23 +5,27 @@ description: Filter changed files → validate kustomize/kubeconform using Flux 
 author: homelab-ops@homelab-ops.com
 
 inputs:
+  debug:
+    description: Print debug info when true
+    required: false
+    default: 'false'
+  base-kustomization-file:
+    description: Optional base kustomization.yaml for post-build
+    required: false
+    default: ''
+  env-file:
+    description: Optional env-file for post-build envsubst
+    required: false
+    default: ''
+  files:
+    description: JSON array of file paths to inspect
+    required: false
+    default: '[]'
   flux-version:
     description: Flux v2 version (e.g. 2.6.2)
     required: false
     # renovate: datasource=github-releases depName=fluxcd/flux2
     default: "v2.6.2"
-  files:
-    description: JSON array of file paths to inspect
-    required: false
-    default: '[]'
-  pkg-include:
-    description: JSON array of glob prefixes to include pkg-dirs (default ["."])
-    required: false
-    default: '["."]'
-  pkg-exclude:
-    description: JSON array of glob prefixes to exclude pkg-dirs (default [])
-    required: false
-    default: '[]'
   kubeconform-flags:
     description: Flags to pass to kubeconform
     required: false
@@ -30,18 +34,14 @@ inputs:
     description: Flags to pass to kustomize
     required: false
     default: '--load-restrictor=LoadRestrictionsNone'
-  env-file:
-    description: Optional env-file for post-build envsubst
+  pkg-exclude:
+    description: JSON array of glob prefixes to exclude pkg-dirs (default [])
     required: false
-    default: ''
-  base-kustomization-file:
-    description: Optional base kustomization.yaml for post-build
+    default: '[]'
+  pkg-include:
+    description: JSON array of glob prefixes to include pkg-dirs (default ["."])
     required: false
-    default: ''
-  debug:
-    description: Print debug info when true
-    required: false
-    default: 'false'
+    default: '["."]'
 
 runs:
   using: composite
@@ -50,8 +50,8 @@ runs:
     if: inputs.files != '[]'
     uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
-      path: ~/.cache/flux-crd-schemas
-      key: flux-schemas-${{ inputs.flux-version }}
+      path: ~/.cache/kubeconform-schemas
+      key: kubeconform-schemas
 
   - name: Install Dependencies
     if: inputs.files != '[]'

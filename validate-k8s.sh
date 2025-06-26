@@ -23,12 +23,8 @@ Options:
   --github-mode                  Run in Github mode (specialized output when used as a github action)
   -h, --help                     Show this help and exit
 
-Example (pre-commit):
-  $(basename "$0") --flux-version 2.6.2 \
-    path/a/kustomization.yaml path/b/x.yaml
-
-Example (GitHub Action):
-  $(basename "$0") --flux-version 2.6.2 \
+Example:
+  $(basename "$0") \
     --pkg-include '["apps/*"]' \
     --pkg-exclude '["components/*"]' \
     --kubeconform-flags '-skip=Secret,IPAddressPool' \
@@ -125,25 +121,43 @@ else
 fi
 
 # Schema cache paths
-FLUX_SCHEMA_DIR="${HOME}/.cache/flux-crd-schemas/master-standalone-strict"
-FLUX_SCHEMA_PARENT="$(dirname "$FLUX_SCHEMA_DIR")"
-DATREE_SCHEMA_LOCATION='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+SCHEMA_DIR="${HOME}/.cache/kubeconform-schemas"
+FLUX_SCHEMA_DIR="${SCHEMA_DIR}/flux-crd-schemas"
+KUBECONFORM_SCHEMA_DIR="${SCHEMA_DIR}/kubernetes-json-schema"
+DATREE_SCHEMA_DIR="${SCHEMA_DIR}/datreeio-CRDs-catalog"
+KUBECONFORM_SCHEMA="${KUBECONFORM_SCHEMA_DIR}/master-standalone-strict/{{.ResourceKind}}{{.KindSuffix}}.json"
+DATREE_SCHEMA="${DATREE_SCHEMA_DIR}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
 
 fetch_schemas() {
-  echo "⬇️  Downloading Flux CRD schemas $FLUX_VERSION..."
-  mkdir -p "$FLUX_SCHEMA_DIR"
+  echo "⬇️  Downloading default schemas..."
+  git clone --filter=blob:none --sparse https://github.com/yannh/kubernetes-json-schema "${KUBECONFORM_SCHEMA_DIR}" 2>&1 | sed -E 's|^(.*)|    \1|g'
+  pushd "${KUBECONFORM_SCHEMA_DIR}" >/dev/null 2>&1
+  git sparse-checkout set master-standalone-strict 2>&1 | sed -E 's|^(.*)|    \1|g'
+  popd >/dev/null 2>&1
+  echo "-> Saved schemas to ${KUBECONFORM_SCHEMA_DIR}"
+  echo
+
+  echo "⬇️  Downloading Flux CRD schemas..."
   local tag="$FLUX_VERSION"
   [[ "$tag" != v* ]] && tag="v$tag"
-  pushd "${FLUX_SCHEMA_DIR}"
+  mkdir -p "$FLUX_SCHEMA_DIR/master-standalone-strict"
   wget --progress=dot:giga -c "https://github.com/fluxcd/flux2/releases/download/${tag}/crd-schemas.tar.gz" -O /tmp/crd-schemas.tar.gz 2>&1 | sed -E 's|^(.*)|    \1|g'
+  pushd "${FLUX_SCHEMA_DIR}/master-standalone-strict" >/dev/null 2>&1
   tar -xzf /tmp/crd-schemas.tar.gz
-  popd
-  echo "✅ Saved schemas to $FLUX_SCHEMA_DIR"
+  popd >/dev/null 2>&1
+  echo "-> Saved schemas to ${FLUX_SCHEMA_DIR}"
+  echo
+
+  echo "⬇️  Downloading Datree CRD schemas..."
+  git clone https://github.com/datreeio/CRDs-catalog "${DATREE_SCHEMA_DIR}" 2>&1 | sed -E 's|^(.*)|    \1|g'
+  echo "-> Saved schemas to ${DATREE_SCHEMA_DIR}"
+  echo
 }
 
 validate_pre() {
   base_flags=( -strict -ignore-missing-schemas -verbose )
-  schema_flags=( -schema-location default -schema-location "$FLUX_SCHEMA_PARENT" -schema-location "$DATREE_SCHEMA_LOCATION" )
+  schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
   for file in "${PRE_FILES[@]}"; do
     [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
     kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "$file" 2>&1 | sed -E 's|^(.*)|    \1|g'
@@ -152,7 +166,7 @@ validate_pre() {
 
 validate_post() {
   base_flags=( -strict -ignore-missing-schemas -verbose )
-  schema_flags=( -schema-location default -schema-location "$FLUX_SCHEMA_PARENT" -schema-location "$DATREE_SCHEMA_LOCATION" )
+  schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
 
   # shellcheck disable=SC2155
   local repo_dir="$(pwd)" temp_dir="$(mktemp -d)" env_before_file="$(mktemp)" env_after_file="$(mktemp)"
@@ -197,7 +211,7 @@ validate_post() {
 }
 
 main() {
-  if [[ ! -d "$FLUX_SCHEMA_DIR" || "$(find "$FLUX_SCHEMA_DIR" -type f -name '*.json' | wc -l)" -eq "0" ]]; then
+  if [[ ! -d "${FLUX_SCHEMA_DIR}" || ! -d "${KUBECONFORM_SCHEMA_DIR}" || ! -d "${DATREE_SCHEMA_DIR}" ]]; then
     [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
     fetch_schemas
     [[ "$MODE" == "github" ]] && echo "::endgroup::"
