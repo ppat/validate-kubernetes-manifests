@@ -14,6 +14,9 @@
     { "type": "test", "section": "🛠 Improvements" }
   ],
   "draft": false,
+  "extra-files": [
+    "README.md"
+  ],
   "initial-version": "0.0.1",
   "packages": {
     ".": {
