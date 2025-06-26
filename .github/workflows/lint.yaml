@@ -58,10 +58,10 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     uses: ppat/github-workflows/.github/workflows/lint-commit-messages.yaml@main
     with:
-      git_ref: ${{ github.head_ref }}
-      fetch_depth: ${{ github.event.pull_request.commits }}
-      from: ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }}
-      to: ${{ github.event.pull_request.head.sha }}
+      git_ref: ${{ github.head_ref || github.ref }}
+      fetch_depth: ${{ github.event.pull_request.commits || 0 }}
+      from: ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits || "" }}
+      to: ${{ github.event.pull_request.head.sha || "" }}
 
   github-actions:
     needs: [detect-changes]
