@@ -189,7 +189,7 @@ patches:
 **GitHub Action Configuration**:
 
 ```yaml
-- uses: your-org/k8s-manifest-validation@v1
+- uses: ppat/validate-kubernetes-manifests
   with:
     env-file: 'ci/validation/.env'
     base-kustomization-file: 'ci/validation/kustomization.yaml'
@@ -198,8 +198,11 @@ patches:
 **Pre-commit Configuration**:
 
 ```yaml
-- id: validate-k8s
-  args:
+repos:
+- repo: https://github.com/ppat/validate-kubernetes-manifests
+  hooks:
+  - id: validate-k8s
+    args:
     - --env-file=ci/validation/.env
     - --base-kustomization-file=ci/validation/kustomization.yaml
 ```
@@ -236,7 +239,7 @@ Pass `.` as the file argument to validate all `kustomization.yaml` files recursi
 
 ```yaml
 - id: validate-k8s
-  args: [--flux-version=2.6.2, .]
+  args: [.]
 ```
 
 This discovers and validates all kustomization.yaml files in the repository.
