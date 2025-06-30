@@ -9,6 +9,7 @@ on:
     - 'ci/test-data/*'
     - 'ci/validation/*'
     - 'action.yml'
+  workflow_dispatch:
   schedule:
   - cron: '0 5 * * 1'
 
