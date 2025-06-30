@@ -18,7 +18,7 @@ inputs:
     required: false
     default: ''
   files:
-    description: JSON array of file paths to inspect
+    description: 'A JSON array of kubernetes manifest file paths to seed discovery. If empty/not provided, discovers all kustomizations.'
     required: false
     default: '[]'
   flux-version:
@@ -46,15 +46,110 @@ inputs:
 runs:
   using: composite
   steps:
-  - name: Cache Flux Schemas
+  - name: Discover kustomizations from seed files
+    id: discover-from-seed
     if: inputs.files != '[]'
+    env:
+      SEED_FILES_JSON: ${{ inputs.files }}
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      echo "Discovering kustomizations from provided file list..."
+
+      declare -a ks_files=()
+      declare -a orphan_files=()
+      mapfile -t changed_files_array < <(echo "$SEED_FILES_JSON" | jq -r '.[]')
+
+      for file in "${changed_files_array[@]}"; do
+        path=$(dirname "$file"); found=false
+        while [[ "$path" != "." && "$path" != "/" ]]; do
+          if [[ -f "$path/kustomization.yaml" ]]; then ks_files+=("$path/kustomization.yaml"); found=true; break; fi
+          path=$(dirname "$path")
+        done
+        if ! $found && [[ -f "./kustomization.yaml" ]]; then ks_files+=("./kustomization.yaml"); found=true; fi
+        if ! $found; then orphan_files+=("$file"); fi
+      done
+
+      # Generate kustomization files output
+      if (( ${#ks_files[@]} > 0 )); then
+        # Dedupe in-place
+        mapfile -t ks_files < <(printf "%s\n" "${ks_files[@]}" | sort -u)
+        # Generate list as json-array serialized to string
+        printf "%s\n" "${ks_files[@]}" | jq -R . | jq -s -c . > /tmp/ks.json
+        echo "kustomization-files=$(cat /tmp/ks.json)" >> $GITHUB_OUTPUT
+      else
+        echo "kustomization-files=[]" >> $GITHUB_OUTPUT
+      fi
+
+      # Generate orphan files output
+      if (( ${#orphan_files[@]} > 0 )); then
+        # Dedupe in-place
+        mapfile -t orphan_files < <(printf "%s\n" "${orphan_files[@]}" | sort -u)
+        # Generate list as json-array serialized to string
+        printf "%s\n" "${orphan_files[@]}" | jq -R . | jq -s -c . > /tmp/orphans.json
+        echo "orphan-files=$(cat /tmp/orphans.json)" >> $GITHUB_OUTPUT
+      else
+        echo "orphan-files=[]" >> $GITHUB_OUTPUT
+      fi
+
+      echo "Found ${#ks_files[@]} kustomization files..."
+      echo "::group::kustomizations"
+      if (( ${#ks_files[@]} > 0 )); then
+        printf "  - %s\n" "${ks_files[@]}"
+      fi
+      echo ""
+      echo "::endgroup::"
+
+      echo "Found ${#orphan_files[@]} orphan Kubernetes files..."
+      echo "::group::orphans"
+      if (( ${#orphan_files[@]} > 0 )); then
+        printf "  - %s\n" "${orphan_files[@]}"
+      fi
+      echo ""
+      echo "::endgroup::"
+
+  - name: Discover all kustomizations
+    id: discover-all
+    if: inputs.files == '[]'
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      echo "No seed files provided, discovering all kustomizations..."
+      mapfile -t ks_files < <(find . -type f -name "kustomization.yaml")
+
+      if (( ${#ks_files[@]} > 0 )); then
+        printf "%s\n" "${ks_files[@]}" | sort -u | jq -R . | jq -s -c . > /tmp/ks.json
+        echo "kustomization-files=$(cat /tmp/ks.json)" >> $GITHUB_OUTPUT
+      else
+        echo "kustomization-files=[]" >> $GITHUB_OUTPUT
+      fi
+
+      echo "Found ${#ks_files[@]} kustomization files..."
+      echo "::group::kustomizations"
+      if (( ${#ks_files[@]} > 0 )); then
+        printf "  - %s\n" "${ks_files[@]}" | sort -u
+      fi
+      echo ""
+      echo "::endgroup::"
+
+  - name: Determine final kustomization list
+    id: final-list
+    env:
+      FINAL_FILES: ${{ steps.discover-from-seed.outputs.kustomization-files || steps.discover-all.outputs.kustomization-files }}
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      echo "kustomizations=${FINAL_FILES:-'[]'}" >> $GITHUB_OUTPUT
+
+  - name: Cache Flux Schemas
+    if: steps.final-list.outputs.kustomizations != '[]'
     uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
       path: ~/.cache/kubeconform-schemas
       key: kubeconform-schemas
 
   - name: Install Dependencies
-    if: inputs.files != '[]'
+    if: steps.final-list.outputs.kustomizations != '[]'
     env:
       # renovate: datasource=github-releases depName=yannh/kubeconform
       kubeconform_version: "v0.7.0"
@@ -79,11 +174,6 @@ runs:
       tar -xzf flux.tar.gz && sudo mv flux /usr/local/bin/
       echo "::endgroup::"
 
-  - name: Run validation
-    if: inputs.files != '[]'
-    shell: bash
-    # yamllint disable-line rule:indentation
-    run: |
       echo "::group::cli-versions"
       echo "Checking CLI versions..."
       echo
@@ -93,7 +183,12 @@ runs:
       echo "::endgroup::"
       echo
 
-      mapfile -t FILES < <(echo '${{ inputs.files }}' | jq -r '.[]')
+  - name: Run validation
+    if: steps.final-list.outputs.kustomizations != '[]'
+    shell: bash
+    # yamllint disable-line rule:indentation
+    run: |
+      mapfile -t FILES < <(echo '${{ steps.final-list.outputs.kustomizations }}' | jq -r '.[]')
       ${{ github.action_path }}/validate-k8s.sh \
         --github-mode \
         --flux-version "${{ inputs.flux-version }}" \

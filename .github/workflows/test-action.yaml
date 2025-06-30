@@ -19,7 +19,26 @@ jobs:
     - name: Checkout
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-    - name: Test
+    - name: Test - Discover from seed
+      uses: ./
+      with:
+        # yamllint disable rule:line-length
+        files: '["ci/test-data/test-package/nginx-deployment.yaml", "ci/test-data/test-package/nginx-ingress.yaml", "ci/test-data/test-package/nginx-service.yaml", "ci/test-data/kustomization.yaml"]'
+        pkg-include: '["ci/test-data/*"]'
+        pkg-exclude: '[]'
+        env-file: 'ci/validation/.env'
+        debug: 'true'
+
+    - name: Test - Discover all
+      uses: ./
+      with:
+        files: '[]'
+        pkg-include: '["ci/test-data/*"]'
+        pkg-exclude: '[]'
+        env-file: 'ci/validation/.env'
+        debug: 'true'
+
+    - name: Test - Explicit List of Kustomizations
       uses: ./
       with:
         files: '["ci/test-data/test-package/kustomization.yaml", "ci/test-data/kustomization.yaml"]'
