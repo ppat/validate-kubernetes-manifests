@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.0](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.0.2...v0.1.0) (2025-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* given a list of input files discover affected kustomizations to validate ([#16](https://github.com/ppat/validate-kubernetes-manifests/issues/16))
+
+### 🛠 Improvements
+
+* minor updates to docs ([#18](https://github.com/ppat/validate-kubernetes-manifests/issues/18)) ([d5cc3f3](https://github.com/ppat/validate-kubernetes-manifests/commit/d5cc3f383f7bde0975eda5a587294b86ca522fbb))
+
+
+### ✨ Features
+
+* given a list of input files discover affected kustomizations to validate ([#16](https://github.com/ppat/validate-kubernetes-manifests/issues/16)) ([aa53b01](https://github.com/ppat/validate-kubernetes-manifests/commit/aa53b01bf89f5d3881395bb73b0a7a6077a3a596))
+
 ## [0.0.2](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.0.1...v0.0.2) (2025-06-29)
 
 
