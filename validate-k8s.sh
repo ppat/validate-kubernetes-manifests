@@ -195,7 +195,7 @@ validate_post() {
       else
         echo "$diff_output" | grep '^>' | sed 's/^> //'
       fi
-      echo
+      echo ""
     fi | sed -E 's|^(.*)|     \1|g'
   fi
 
@@ -232,13 +232,13 @@ validate_post() {
     i=$((i+1))
   done
   popd >/dev/null 2>&1
-  echo
+  echo ""
 
   # Display individual results for each built kustomization
   echo "Validation Results:"
   echo "------------------"
   jq -s -r '.[] | .[] | @tsv' "${results_dir}"/output_*.json | sort | column -t -N 'PATH,KIND,NAME,STATUS,ERROR'
-  echo
+  echo ""
 
   # Aggregate summaries of all individual validation results
   echo "Aggregating validation results:"
@@ -257,6 +257,7 @@ validate_post() {
     }' \
     "${results_dir}"/result_*.json > "${results_dir}/aggregated.json"
   cat "${results_dir}/aggregated.json"
+  echo ""
 
   local invalid_count
   local error_count
