@@ -96,7 +96,6 @@ done
 
 # Derive package dirs from PRE_FILES
 PKG_DIRS=()
-PKG_DIRS=()
 for f in "${PRE_FILES[@]}"; do
   dir=$(dirname "$f")
   # Remove leading ./ if present for consistent comparison
@@ -164,8 +163,8 @@ fetch_schemas() {
 }
 
 validate_pre() {
-  base_flags=( -strict -ignore-missing-schemas -verbose )
-  schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
+  local base_flags=( -strict -ignore-missing-schemas -verbose )
+  local schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
   for file in "${PRE_FILES[@]}"; do
     [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
     kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "$file" 2>&1 | sed -E 's|^(.*)|    \1|g'
@@ -173,11 +172,13 @@ validate_pre() {
 }
 
 validate_post() {
-  base_flags=( -strict -ignore-missing-schemas -verbose )
-  schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
+  local base_flags=( -strict -ignore-missing-schemas -verbose -output json -summary )
+  local schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
 
   # shellcheck disable=SC2155
   local repo_dir="$(pwd)" temp_dir="$(mktemp -d)" env_before_file="$(mktemp)" env_after_file="$(mktemp)"
+  local results_dir="${temp_dir}/results"
+  mkdir -p "${results_dir}"
   # shellcheck disable=SC2064
   trap "rm -rf ${temp_dir} ${env_before_file} ${env_after_file}" EXIT
 
@@ -194,7 +195,7 @@ validate_post() {
       else
         echo "$diff_output" | grep '^>' | sed 's/^> //'
       fi
-      echo
+      echo " "
     fi | sed -E 's|^(.*)|     \1|g'
   fi
 
@@ -204,18 +205,70 @@ validate_post() {
   else
     kustomize create
   fi
+
+  local i=0
   for pkg_dir in "${PKG_DIRS[@]}"; do
-    echo "-> ${pkg_dir}:"
     dir="${repo_dir}/${pkg_dir}"
     relative_path="../$(realpath --relative-to="$temp_dir" "$dir")"
     [[ -d "$relative_path" ]] || { echo "✖ Missing dir: $relative_path"; exit 1; }
     kustomize edit add resource "$relative_path"
-    kustomize build . "$KUSTOMIZE_FLAGS" \
-      | flux envsubst \
-      | kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" 2>&1 | sed -E 's|^(.*)|      \1|g'
+
+    local built_kustomization="${results_dir}/built_${i}.yaml"
+    local result_file="${results_dir}/result_${i}.json"
+    local output_file="${results_dir}/output_${i}.json"
+
+    $DEBUG && >&2 echo "${pkg_dir}: building kustomization..."
+    kustomize build . "$KUSTOMIZE_FLAGS" | flux envsubst > "${built_kustomization}"
+    $DEBUG && >&2 echo "${pkg_dir}: validating built kustomization..."
+    if ! (kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "${built_kustomization}" > "${result_file}"); then
+      $DEBUG && >&2 echo "${pkg_dir}: kubeconform failed!"
+    fi
+
+    jq --arg pkg_dir "${pkg_dir}" \
+      '[.resources[] | [$pkg_dir, .kind, .name, (.status | sub("status";"")), .msg]]' \
+      "${result_file}" > "${output_file}"
+
     kustomize edit remove resource "$relative_path"
+    i=$((i+1))
   done
   popd >/dev/null 2>&1
+  echo " "
+
+  # Display individual results for each built kustomization
+  echo "Validation Results:"
+  echo "------------------"
+  jq -s -r '.[] | .[] | @tsv' "${results_dir}"/output_*.json | sort | column -t -N 'PATH,KIND,NAME,STATUS,ERROR'
+  echo " "
+
+  # Aggregate summaries of all individual validation results
+  echo "Aggregating validation results:"
+  echo "------------------------------"
+  jq -s \
+    '{
+      summary: (reduce .[].summary as $s
+        (
+          {"valid":0, "invalid":0, "errors":0, "skipped":0};
+          .valid += $s.valid |
+          .invalid += $s.invalid |
+          .errors += $s.errors |
+          .skipped += $s.skipped
+        )
+      )
+    }' \
+    "${results_dir}"/result_*.json > "${results_dir}/aggregated.json"
+  cat "${results_dir}/aggregated.json"
+  echo " "
+
+  local invalid_count
+  local error_count
+  invalid_count=$(jq '.summary.invalid' "${results_dir}/aggregated.json")
+  error_count=$(jq '.summary.errors' "${results_dir}/aggregated.json")
+
+  if (( invalid_count > 0 || error_count > 0 )); then
+    >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
+    return 1
+  fi
+  return 0
 }
 
 main() {
@@ -241,9 +294,13 @@ main() {
   if (( ${#PKG_DIRS[@]} > 0 )); then
     echo "🧪 Post-build validation (resources packaged within each kustomization)..."
     [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
-    validate_post
-    [[ "$MODE" == "github" ]] && echo "::endgroup::"
-    echo "✅ Post-build OK"
+    if validate_post; then
+      [[ "$MODE" == "github" ]] && echo "::endgroup::"
+      echo "✅ Post-build OK"
+    else
+      echo "❌ Validation failed"
+      exit 1
+    fi
   else
     echo "⚠️  Skipping post-build (no kustomization package dirs)"
   fi
