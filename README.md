@@ -51,7 +51,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Validate Kubernetes Manifests
-      uses: ppat/validate-kubernetes-manifests@v0.1.0 # x-release-please-version
+      uses: ppat/validate-kubernetes-manifests@v0.1.1 # x-release-please-version
       with:
         files: ${{ needs.detect-changes.outputs.files }}
         pkg-include: '["apps/*", "infrastructure/*"]'
@@ -64,7 +64,7 @@ jobs:
 # .pre-commit-config.yaml
 repos:
 - repo: https://github.com/ppat/validate-kubernetes-manifests
-  rev: v0.1.0 # x-release-please-version
+  rev: v0.1.1 # x-release-please-version
   hooks:
   - id: validate-k8s
     args:

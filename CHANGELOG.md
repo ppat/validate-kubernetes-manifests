@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.0...v0.1.1) (2025-07-01)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* validation should run on all files and error out afterwards if validation failed in aggregate ([#21](https://github.com/ppat/validate-kubernetes-manifests/issues/21)) ([3c6da45](https://github.com/ppat/validate-kubernetes-manifests/commit/3c6da452a8ad3167e912f025078e4584cd6305db))
+
 ## [0.1.0](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.0.2...v0.1.0) (2025-06-30)
 
 
