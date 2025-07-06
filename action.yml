@@ -154,7 +154,7 @@ runs:
       # renovate: datasource=github-releases depName=yannh/kubeconform
       kubeconform_version: "v0.7.0"
       # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
-      kustomize_version: "v5.6.0"
+      kustomize_version: "v5.7.0"
       # renovate: datasource=github-releases depName=fluxcd/flux2
       flux_version: "v2.6.3"
     shell: bash
