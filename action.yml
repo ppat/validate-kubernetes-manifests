@@ -25,7 +25,7 @@ inputs:
     description: Flux v2 version (e.g. 2.6.2)
     required: false
     # renovate: datasource=github-releases depName=fluxcd/flux2
-    default: "v2.6.3"
+    default: "v2.6.4"
   kubeconform-flags:
     description: Flags to pass to kubeconform
     required: false
@@ -156,7 +156,7 @@ runs:
       # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
       kustomize_version: "v5.7.0"
       # renovate: datasource=github-releases depName=fluxcd/flux2
-      flux_version: "v2.6.3"
+      flux_version: "v2.6.4"
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
