@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.2](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.1...v0.1.2) (2025-07-28)
+
+
+### ✨ Features
+
+* update kubernetes-sigs/kustomize (v5.6.0 -&gt; v5.7.0) ([#23](https://github.com/ppat/validate-kubernetes-manifests/issues/23)) ([6ff0d3c](https://github.com/ppat/validate-kubernetes-manifests/commit/6ff0d3c03cc51e39eca0610480b816e0312ad3e9))
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update fluxcd/flux2 (v2.6.3 -&gt; v2.6.4) ([#26](https://github.com/ppat/validate-kubernetes-manifests/issues/26)) ([bd5c8e4](https://github.com/ppat/validate-kubernetes-manifests/commit/bd5c8e432f2474e3840c92c45fdc9cc5d1866ba0))
+* update kubernetes-sigs/kustomize (v5.7.0 -&gt; v5.7.1) ([#29](https://github.com/ppat/validate-kubernetes-manifests/issues/29)) ([ad3897e](https://github.com/ppat/validate-kubernetes-manifests/commit/ad3897ee7de13ac976ba6688146e1189f4259e08))
+
 ## [0.1.1](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.0...v0.1.1) (2025-07-01)
 
 
