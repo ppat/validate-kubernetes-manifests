@@ -145,11 +145,12 @@ main() {
     # shellcheck disable=SC2068
     "${SCRIPT_DIR}"/validate-pre.sh ${PRE_FILES[@]} | sed -E 's|^|    |g'
     mode_output echo "::endgroup::"
+    echo " "
     echo "✅ Pre-build OK"
   else
     echo "⚠️ Skipping pre-build (no kustomization.yaml files)"
   fi
-  echo
+  echo " "
 
   if (( ${#PKG_DIRS[@]} > 0 )); then
     echo "🧪 Post-build validation (resources packaged within each kustomization)..."
@@ -157,6 +158,7 @@ main() {
     # shellcheck disable=SC2068
     if "${SCRIPT_DIR}"/validate-post.sh -e "${ENV_FILE}" -b "${BASE_KFILE}" ${PKG_DIRS[@]} | sed -E 's|^|    |g'; then
       mode_output echo "::endgroup::"
+      echo " "
       echo "✅ Post-build OK"
     else
       mode_output echo "::endgroup::"
@@ -167,7 +169,7 @@ main() {
   else
     echo "⚠️ Skipping post-build (no kustomization package dirs)"
   fi
-  echo
+  echo " "
 }
 
 main
