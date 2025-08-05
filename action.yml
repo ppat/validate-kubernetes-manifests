@@ -151,6 +151,7 @@ runs:
 
   - name: Set monthly cache key
     id: cache-key
+    shell: bash
     run: echo "monthly_cache_key=$(date +'%Y-%m')" >> "$GITHUB_OUTPUT"
 
   - name: Cache Flux Schemas
