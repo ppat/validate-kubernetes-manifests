@@ -138,7 +138,11 @@ mode_output() {
 main() {
   export PATH="${BIN_DIR}:$PATH"
   "${SCRIPT_DIR}"/install-dependencies.sh "${BIN_DIR}"
+  echo " "
+
   "${SCRIPT_DIR}"/fetch-schemas.sh "${SCHEMA_DIR}"
+  echo " "
+
   if (( ${#PRE_FILES[@]} > 0 )); then
     echo "🧪 Pre-build validation (kustomization files only)..."
     mode_output "::group::validate-kustomizations"

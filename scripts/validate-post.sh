@@ -157,10 +157,8 @@ validate_post() {
 
   if (( invalid_count > 0 || error_count > 0 )); then
     >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
-    echo
     return 1
   fi
-  echo
   return 0
 }
 
