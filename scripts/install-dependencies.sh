@@ -79,12 +79,12 @@ main() {
   mkdir -p "${dest_dir}"
 
   mode_output "::group::install-dependencies"
-  install_dependencies | sed -E 's|^|    |g'
+  install_dependencies
   mode_output "::endgroup::"
   echo
 
   mode_output "::group::cli-versions"
-  show_versions | sed -E 's|^|    |g'
+  show_versions
   mode_output "::endgroup::"
   echo
 }

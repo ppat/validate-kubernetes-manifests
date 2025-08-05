@@ -12,7 +12,6 @@ A unified script to validate Kubernetes manifests by:
   4) Running kubeconform and kustomize validations
 
 Options:
-  --flux-version VERSION         Flux CLI version (default: 2.6.2)
   --pkg-include JSON             JSON array of glob prefixes to include pkg-dirs (default: ["." ])
   --pkg-exclude JSON             JSON array of glob prefixes to exclude pkg-dirs (default: [])
   --kubeconform-flags FLAGS      Flags to pass to kubeconform (default: -skip=Secret)
@@ -42,7 +41,6 @@ BIN_DIR="${HOME}/.local/validate-kubernetes-manifests/bin"
 export SCHEMA_DIR="${HOME}/.cache/kubeconform-schemas"
 
 export DEBUG=false
-export FLUX_VERSION=""
 export KUBECONFORM_FLAGS="-skip=Secret"
 export KUSTOMIZE_FLAGS="--load-restrictor=LoadRestrictionsNone"
 export MODE='none'
@@ -56,7 +54,6 @@ POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   # exported variables even if not referrenced within this script, they maybe used by subscripts (even if not explicitly passed)
   case $1 in
-    --flux-version)            export FLUX_VERSION=$2;          shift 2;;
     --pkg-include)             INCLUDE_JSON=$2;                 shift 2;;
     --pkg-exclude)             EXCLUDE_JSON=$2;                 shift 2;;
     --kubeconform-flags)       export KUBECONFORM_FLAGS=$2;     shift 2;;
@@ -133,122 +130,14 @@ if (( ${#PKG_DIRS[@]} > 0 )); then
 fi
 
 
-validate_pre() {
-  [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations" || true
-  for file in "${PRE_FILES[@]}"; do
-    [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
-    "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS}" "${file}" 2>&1
-  done
-  [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
-}
-
-validate_post() {
-  [[ "$MODE" == "github" ]] && echo "::group::validate-resources" || true
-  # shellcheck disable=SC2155
-  local repo_dir="$(pwd)" temp_dir="$(mktemp -d)" env_before_file="$(mktemp)" env_after_file="$(mktemp)"
-  local results_dir="${temp_dir}/results"
-  mkdir -p "${results_dir}"
-  # shellcheck disable=SC2064
-  trap "rm -rf ${temp_dir} ${env_before_file} ${env_after_file}" EXIT
-
-  if [[ -n "$ENV_FILE" && -f "$ENV_FILE" ]]; then
-    echo "🔧 Using env from $ENV_FILE for envsubst:"
-    # Capture environment before loading
-    env | sort > "$env_before_file"
-    # load environment vars from file
-    set -o allexport; source "$ENV_FILE"; set +o allexport
-    if $DEBUG; then
-      env | sort > "$env_after_file"
-      if diff_output=$(diff "$env_before_file" "$env_after_file" 2>/dev/null); then
-        echo "(no new environment variables loaded)"
-      else
-        echo "$diff_output" | grep '^>' | sed 's/^> //'
-      fi
-      echo " "
-    fi | sed -E 's|^|    |g'
-  fi
-
-  pushd "${temp_dir}" >/dev/null 2>&1
-  if [[ -n "$BASE_KFILE" && -f "${repo_dir}/${BASE_KFILE}" ]]; then
-    cp "${repo_dir}/${BASE_KFILE}" kustomization.yaml
-  else
-    kustomize create
-  fi
-
-  local i=0
-  for pkg_dir in "${PKG_DIRS[@]}"; do
-    dir="${repo_dir}/${pkg_dir}"
-    relative_path="../$(realpath --relative-to="$temp_dir" "$dir")"
-    [[ -d "$relative_path" ]] || { echo "✖ Missing dir: $relative_path"; exit 1; }
-    kustomize edit add resource "$relative_path"
-
-    local built_kustomization="${results_dir}/built_${i}.yaml"
-    local result_file="${results_dir}/result_${i}.json"
-    local output_file="${results_dir}/output_${i}.json"
-
-    $DEBUG && >&2 echo "${pkg_dir}: building kustomization..."
-    kustomize build . "$KUSTOMIZE_FLAGS" | flux envsubst > "${built_kustomization}"
-    $DEBUG && >&2 echo "${pkg_dir}: validating built kustomization..."
-    if ! "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS} -summary" -f json -o "${result_file}" "${built_kustomization}"; then
-      $DEBUG && >&2 echo "${pkg_dir}: kubeconform failed!"
-    fi
-
-    jq --arg pkg_dir "${pkg_dir}" \
-      '[.resources[] | [$pkg_dir, .kind, .name, (.status | sub("status";"")), .msg]]' \
-      "${result_file}" > "${output_file}"
-
-    kustomize edit remove resource "$relative_path"
-    i=$((i+1))
-  done
-  popd >/dev/null 2>&1
-  echo " "
-
-  # Display individual results for each built kustomization
-  echo "Validation Results:"
-  echo "------------------"
-  jq -s -r '.[] | .[] | @tsv' "${results_dir}"/output_*.json | sort | column -t -N 'PATH,KIND,NAME,STATUS,ERROR'
-  echo " "
-
-  # Aggregate summaries of all individual validation results
-  echo "Aggregating validation results:"
-  echo "------------------------------"
-  jq -s \
-    '{
-      summary: (reduce .[].summary as $s
-        (
-          {"valid":0, "invalid":0, "errors":0, "skipped":0};
-          .valid += $s.valid |
-          .invalid += $s.invalid |
-          .errors += $s.errors |
-          .skipped += $s.skipped
-        )
-      )
-    }' \
-    "${results_dir}"/result_*.json > "${results_dir}/aggregated.json"
-  cat "${results_dir}/aggregated.json"
-  echo " "
-
-  local invalid_count
-  local error_count
-  invalid_count=$(jq '.summary.invalid' "${results_dir}/aggregated.json")
-  error_count=$(jq '.summary.errors' "${results_dir}/aggregated.json")
-
-  if (( invalid_count > 0 || error_count > 0 )); then
-    >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
-    [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
-    return 1
-  fi
-  [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
-  return 0
-}
-
 main() {
   export PATH="${BIN_DIR}:$PATH"
   "${SCRIPT_DIR}"/install-dependencies.sh "${BIN_DIR}"
   "${SCRIPT_DIR}"/fetch-schemas.sh "${SCHEMA_DIR}"
   if (( ${#PRE_FILES[@]} > 0 )); then
     echo "🧪 Pre-build validation (kustomization files only)..."
-    validate_pre | sed -E 's|^|    |g'
+    # shellcheck disable=SC2068
+    "${SCRIPT_DIR}"/validate-pre.sh ${PRE_FILES[@]} | sed -E 's|^|    |g'
     echo "✅ Pre-build OK"
   else
     echo "⚠️ Skipping pre-build (no kustomization.yaml files)"
@@ -257,7 +146,8 @@ main() {
 
   if (( ${#PKG_DIRS[@]} > 0 )); then
     echo "🧪 Post-build validation (resources packaged within each kustomization)..."
-    if validate_post | sed -E 's|^|    |g'; then
+    # shellcheck disable=SC2068
+    if "${SCRIPT_DIR}"/validate-post.sh -e "${ENV_FILE}" -b "${BASE_KFILE}" ${PKG_DIRS[@]} | sed -E 's|^|    |g'; then
       echo "✅ Post-build OK"
     else
       echo "❌ Validation failed"
