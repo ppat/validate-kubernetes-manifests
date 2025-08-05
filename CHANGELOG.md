@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.2...v0.1.3) (2025-08-05)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* extract out validate-pre.sh, validate-post.sh, run-kubeconform.sh, fetch-schemas.sh, install-dependencies.sh into separate scripts ([#32](https://github.com/ppat/validate-kubernetes-manifests/issues/32)) ([990e032](https://github.com/ppat/validate-kubernetes-manifests/commit/990e032f8ee5875fbe6486330c70e3a5c0ffbe1e))
+
 ## [0.1.2](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.1...v0.1.2) (2025-07-28)
 
 
