@@ -64,7 +64,6 @@ main() {
   mode_output "::group::cli-versions"
   echo "Checking CLI versions..."
   echo
-  export PATH="${dest_dir}:$PATH"
   kustomize version
   kubeconform -v
   flux -v
