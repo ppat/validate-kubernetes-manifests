@@ -58,3 +58,4 @@ repos:
     - '["ci/test-data/*"]'
     - --env-file
     - ci/validation/.env
+    verbose: true

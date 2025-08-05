@@ -38,6 +38,7 @@ EOF
 
 # Defaults
 SCRIPT_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
+BIN_DIR="${HOME}/.local/validate-kubernetes-manifests/bin"
 export SCHEMA_DIR="${HOME}/.cache/kubeconform-schemas"
 
 export DEBUG=false
@@ -242,6 +243,8 @@ validate_post() {
 }
 
 main() {
+  export PATH="${BIN_DIR}:$PATH"
+  "${SCRIPT_DIR}"/install-dependencies.sh "${BIN_DIR}"
   "${SCRIPT_DIR}"/fetch-schemas.sh "${SCHEMA_DIR}"
   if (( ${#PRE_FILES[@]} > 0 )); then
     echo "🧪 Pre-build validation (kustomization files only)..."
