@@ -42,20 +42,13 @@ if [[ ${#POSITIONAL[@]} -eq 0 ]]; then
   exit 1
 fi
 
-mode_output() {
-  local msg="$1"
-  [[ "$MODE" == "github" ]] && echo "${msg}" || true
-}
-
 validate_pre() {
   local files=("$@")
 
-  mode_output "::group::validate-kustomizations"
   for file in "${files[@]}"; do
     [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
     "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS}" -d "${SCHEMA_DIR}" "${file}" 2>&1
   done
-  mode_output "::endgroup::"
 }
 
 validate_pre "${POSITIONAL[@]}"

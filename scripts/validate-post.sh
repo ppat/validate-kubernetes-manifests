@@ -50,11 +50,6 @@ if [[ ${#POSITIONAL[@]} -eq 0 ]]; then
   exit 1
 fi
 
-mode_output() {
-  local msg="$1"
-  [[ "$MODE" == "github" ]] && echo "${msg}" || true
-}
-
 display_validation_status() {
   local files=("$@")
   echo "Validation Results:"
@@ -90,7 +85,6 @@ aggregate_results() {
 validate_post() {
   local dirs=("$@")
 
-  mode_output "::group::validate-resources"
   # shellcheck disable=SC2155
   local repo_dir="$(pwd)" temp_dir="$(mktemp -d)" env_before_file="$(mktemp)" env_after_file="$(mktemp)"
   local results_dir="${temp_dir}/results"
@@ -160,14 +154,12 @@ validate_post() {
   local error_count
   invalid_count=$(jq '.summary.invalid' "${results_dir}/aggregated.json")
   error_count=$(jq '.summary.errors' "${results_dir}/aggregated.json")
-  set -x
+
   if (( invalid_count > 0 || error_count > 0 )); then
     >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
-    mode_output echo "::endgroup::"
     echo
     return 1
   fi
-  mode_output echo "::endgroup::"
   echo
   return 0
 }
