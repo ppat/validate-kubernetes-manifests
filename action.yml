@@ -43,14 +43,6 @@ inputs:
     required: false
     default: '["."]'
 
-env:
-  # renovate: datasource=github-releases depName=yannh/kubeconform
-  KUBECONFORM_VERSION: "v0.7.0"
-  # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
-  KUSTOMIZE_VERSION: "v5.7.1"
-  # renovate: datasource=github-releases depName=fluxcd/flux2
-  FLUX_VERSION: "v2.6.4"
-
 runs:
   using: composite
   steps:
@@ -170,6 +162,13 @@ runs:
 
   - name: Run validation
     if: steps.final-list.outputs.kustomizations != '[]'
+    env:
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      KUBECONFORM_VERSION: "v0.7.0"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
+      KUSTOMIZE_VERSION: "v5.7.1"
+      # renovate: datasource=github-releases depName=fluxcd/flux2
+      FLUX_VERSION: "v2.6.4"
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
