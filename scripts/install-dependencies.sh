@@ -46,7 +46,6 @@ mode_output() {
 }
 
 main() {
-  set -x
   local dest_dir="$1"
   mkdir -p "${dest_dir}"
 
