@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.3...v0.1.4) (2025-08-05)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* remove references to variables that are no longer used ([4472371](https://github.com/ppat/validate-kubernetes-manifests/commit/4472371120d2897387fe5686fca48560e6406626))
+
 ## [0.1.3](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.2...v0.1.3) (2025-08-05)
 
 
