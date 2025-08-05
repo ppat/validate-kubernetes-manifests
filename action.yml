@@ -157,7 +157,7 @@ runs:
     if: steps.final-list.outputs.kustomizations != '[]'
     uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
-      path: "${{ env.HOME }}/.local/bin"
+      path: "~/.local/validate-kubernetes-manifests/bin"
       key: dependencies-${{ steps.cache-key.outputs.monthly_cache_key }}
 
   - name: Run validation
@@ -174,7 +174,7 @@ runs:
     run: |
       echo "Running validation..."
       mapfile -t FILES < <(echo '${{ steps.final-list.outputs.kustomizations }}' | jq -r '.[]')
-      ${{ github.action_path }}/scripts/install-dependencies.sh "${{ env.HOME }}/.local/bin"
+      ${{ github.action_path }}/scripts/install-dependencies.sh ~/.local/validate-kubernetes-manifests/bin
       ${{ github.action_path }}/scripts/validate-k8s.sh \
         --github-mode \
         --flux-version "${{ inputs.flux-version }}" \
