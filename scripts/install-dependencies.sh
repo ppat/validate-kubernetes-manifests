@@ -20,8 +20,8 @@ install_from_github_release_asset() {
   local repository="$1"
   local version="$2"
   local asset="$3"
-  local executable="$4"
-  local dest_dir="$5"
+  local dest_dir="$4"
+  local executable="$5"
   local url="https://github.com/${repository}/releases/download/${version}/${asset}"
   if [[ -f "${dest_dir}/${executable}" ]]; then
     echo "♻️ Using cached binary..."
