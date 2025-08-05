@@ -9,13 +9,6 @@ MODE=${MODE:-'none'}
 CURL_FLAGS="$($DEBUG && echo "-fsSLv" || echo "-fsSL")"
 
 
-install_from_url() {
-  local url="$1"
-  local executable="$2"
-  local dest_dir="$3"
-
-}
-
 install_from_github_release_asset() {
   local repository="$1"
   local version="$2"
@@ -44,28 +37,35 @@ mode_output() {
   [[ "$MODE" == "github" ]] && echo "${msg}" || true
 }
 
+install_dependencies() {
+  echo "Install kubeconform ${KUBECONFORM_VERSION}..."
+  install_from_github_release_asset yannh/kubeconform "${KUBECONFORM_VERSION}" kubeconform-linux-amd64.tar.gz "${dest_dir}" kubeconform | sed -E 's|^|    |g'
+  echo
+  echo "Install kustomize ${KUSTOMIZE_VERSION}..."
+  install_from_github_release_asset kubernetes-sigs/kustomize "kustomize%2F${KUSTOMIZE_VERSION}" "kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" "${dest_dir}" kustomize | sed -E 's|^|    |g'
+  echo
+  echo "Install flux ${FLUX_VERSION}..."
+  install_from_github_release_asset fluxcd/flux2 "${FLUX_VERSION}" "flux_${FLUX_VERSION#v}_linux_amd64.tar.gz" "${dest_dir}" flux | sed -E 's|^|    |g'
+}
+
+show_versions() {
+  echo "Checking CLI versions..."
+  kustomize version | sed -E 's|^|    |g'
+  kubeconform -v | sed -E 's|^|    |g'
+  flux -v | sed -E 's|^|    |g'
+}
+
 main() {
   local dest_dir="$1"
   mkdir -p "${dest_dir}"
 
   mode_output "::group::install-dependencies"
-  echo "Install kubeconform ${KUBECONFORM_VERSION}..."
-  install_from_github_release_asset yannh/kubeconform "${KUBECONFORM_VERSION}" kubeconform-linux-amd64.tar.gz "${dest_dir}" kubeconform
-  echo
-  echo "Install kustomize ${KUSTOMIZE_VERSION}..."
-  install_from_github_release_asset kubernetes-sigs/kustomize "kustomize%2F${KUSTOMIZE_VERSION}" "kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" "${dest_dir}" kustomize
-  echo
-  echo "Install flux ${FLUX_VERSION}..."
-  install_from_github_release_asset fluxcd/flux2 "${FLUX_VERSION}" "flux_${FLUX_VERSION#v}_linux_amd64.tar.gz" "${dest_dir}" flux
+  install_dependencies | sed -E 's|^|    |g'
   mode_output "::endgroup::"
   echo
 
   mode_output "::group::cli-versions"
-  echo "Checking CLI versions..."
-  echo
-  kustomize version
-  kubeconform -v
-  flux -v
+  show_versions | sed -E 's|^|    |g'
   mode_output "::endgroup::"
   echo
 }
