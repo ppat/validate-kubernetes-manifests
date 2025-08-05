@@ -33,6 +33,7 @@ install_from_github_release_asset() {
   curl ${CURL_FLAGS} -o "${TEMP_DIR}/${asset}" "${url}" 2>&1 | sed -E 's|^|  |g'
   cd "${TEMP_DIR}/"
   tar -xzf "${asset}"
+  ls -al
   mv "${executable}" "${dest_dir}/${executable}"
   chown "${USER}" "${dest_dir}/${executable}"
   chmod 755 "${dest_dir}/${executable}"
