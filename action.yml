@@ -21,11 +21,6 @@ inputs:
     description: 'A JSON array of kubernetes manifest file paths to seed discovery. If empty/not provided, discovers all kustomizations.'
     required: false
     default: '[]'
-  flux-version:
-    description: Flux v2 version (e.g. 2.6.2)
-    required: false
-    # renovate: datasource=github-releases depName=fluxcd/flux2
-    default: "v2.6.4"
   kubeconform-flags:
     description: Flags to pass to kubeconform
     required: false

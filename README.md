@@ -78,7 +78,6 @@ repos:
 
 | Parameter | Description | Default | Example |
 |-----------|-------------|---------|---------|
-| `flux-version` | Flux CLI version for CRD schemas | `2.6.2` | `2.6.2` |
 | `files` | JSON array of file paths (Action only) | `[]` | `["apps/media/plex/kustomization.yaml"]` |
 | `pkg-include` | Glob patterns for including directories | `["."]` | `["apps/*"]` |
 | `pkg-exclude` | Glob patterns for excluding directories | `[]` | `["test/*"]` |
