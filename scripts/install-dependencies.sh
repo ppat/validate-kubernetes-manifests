@@ -33,7 +33,7 @@ install_from_github_release_asset() {
   curl ${CURL_FLAGS} -o "${TEMP_DIR}/${asset}" "${url}" 2>&1 | sed -E 's|^|  |g'
   cd "${TEMP_DIR}/"
   tar -xzf "${asset}"
-  install -o "${USER}" -m 755 -D "${executable}" "${dest_dir}/${executable}"
+  install -o "${USER}" -m 755 "${executable}" "${dest_dir}/${executable}"
   echo "-> ${dest_dir}/${executable}"
 }
 
@@ -44,6 +44,7 @@ mode_output() {
 
 main() {
   local dest_dir="$1"
+  mkdir -p "${dest_dir}"
 
   mode_output "::group::install-dependencies"
   echo "Install kubeconform ${KUBECONFORM_VERSION}..."
