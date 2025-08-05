@@ -55,7 +55,6 @@ display_validation_status() {
   echo "Validation Results:"
   echo "------------------"
   jq -s -r '.[] | .[] | @tsv' "${files[@]}" | sort | column -t -N 'PATH,KIND,NAME,STATUS,ERROR'
-  echo " "
 }
 
 aggregate_results() {
@@ -79,7 +78,6 @@ aggregate_results() {
     }' \
     "${files[@]}" > "${output_file}"
   cat "${results_dir}/aggregated.json"
-  echo " "
 }
 
 validate_post() {
@@ -146,6 +144,7 @@ validate_post() {
 
   # Display individual results for each built kustomization
   display_validation_status "${results_dir}"/output_*.json
+  echo " "
 
   # Aggregate summaries of all individual validation results
   aggregate_results "${results_dir}/aggregated.json" "${results_dir}"/result_*.json
