@@ -160,13 +160,15 @@ validate_post() {
   local error_count
   invalid_count=$(jq '.summary.invalid' "${results_dir}/aggregated.json")
   error_count=$(jq '.summary.errors' "${results_dir}/aggregated.json")
-
+  set -x
   if (( invalid_count > 0 || error_count > 0 )); then
     >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
     mode_output echo "::endgroup::"
+    echo
     return 1
   fi
   mode_output echo "::endgroup::"
+  echo
   return 0
 }
 
