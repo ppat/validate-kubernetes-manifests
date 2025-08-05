@@ -48,7 +48,7 @@ repos:
   hooks:
   - id: validate-k8s
     name: Validate Kubernetes manifests
-    entry: validate-k8s.sh
+    entry: scripts/validate-k8s.sh
     language: script
     pass_filenames: true
     require_serial: true
@@ -58,4 +58,4 @@ repos:
     - '["ci/test-data/*"]'
     - --env-file
     - ci/validation/.env
-    - --debug
+    verbose: false

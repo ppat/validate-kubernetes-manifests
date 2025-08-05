@@ -5,10 +5,10 @@ on:
   pull_request:
     paths:
     - '.github/workflows/test-action.yaml'
-    - 'validate-k8s.sh'
+    - 'action.yml'
     - 'ci/test-data/*'
     - 'ci/validation/*'
-    - 'action.yml'
+    - 'scripts/*.sh'
   workflow_dispatch:
   schedule:
   - cron: '0 5 * * 1'
@@ -31,7 +31,7 @@ jobs:
         pkg-include: '["ci/test-data/*"]'
         pkg-exclude: '[]'
         env-file: 'ci/validation/.env'
-        debug: 'true'
+        debug: 'false'
 
     - name: Test - Discover all
       uses: ./
@@ -40,7 +40,7 @@ jobs:
         pkg-include: '["ci/test-data/*"]'
         pkg-exclude: '[]'
         env-file: 'ci/validation/.env'
-        debug: 'true'
+        debug: 'false'
 
     - name: Test - Explicit List of Kustomizations
       uses: ./
@@ -49,4 +49,4 @@ jobs:
         pkg-include: '["ci/test-data/*"]'
         pkg-exclude: '[]'
         env-file: 'ci/validation/.env'
-        debug: 'true'
+        debug: 'false'

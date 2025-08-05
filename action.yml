@@ -141,55 +141,40 @@ runs:
     run: |
       echo "kustomizations=${FINAL_FILES:-'[]'}" >> $GITHUB_OUTPUT
 
+  - name: Set monthly cache key
+    id: cache-key
+    shell: bash
+    run: echo "monthly_cache_key=$(date +'%Y-%m')" >> "$GITHUB_OUTPUT"
+
   - name: Cache Flux Schemas
     if: steps.final-list.outputs.kustomizations != '[]'
     uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
     with:
       path: ~/.cache/kubeconform-schemas
-      key: kubeconform-schemas
+      key: kubeconform-schemas-v1
 
-  - name: Install Dependencies
+  - name: Cache Dependencies
     if: steps.final-list.outputs.kustomizations != '[]'
-    env:
-      # renovate: datasource=github-releases depName=yannh/kubeconform
-      kubeconform_version: "v0.7.0"
-      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
-      kustomize_version: "v5.7.1"
-      # renovate: datasource=github-releases depName=fluxcd/flux2
-      flux_version: "v2.6.4"
-    shell: bash
-    # yamllint disable-line rule:indentation
-    run: |
-      echo "::group::install-dependencies"
-      echo "Install kubeconform ${kubeconform_version}..."
-      wget --progress=dot:giga -O kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/${kubeconform_version}/kubeconform-linux-amd64.tar.gz
-      tar -xzf kubeconform.tar.gz && sudo mv kubeconform /usr/local/bin/
-
-      echo "Install kustomize ${kustomize_version}..."
-      wget --progress=dot:giga -O kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz
-      tar -xzf kustomize.tar.gz && sudo mv kustomize /usr/local/bin/
-
-      echo "Install flux ${flux_version}..."
-      wget --progress=dot:giga -O flux.tar.gz https://github.com/fluxcd/flux2/releases/download/${flux_version}/flux_${flux_version#v}_linux_amd64.tar.gz
-      tar -xzf flux.tar.gz && sudo mv flux /usr/local/bin/
-      echo "::endgroup::"
-
-      echo "::group::cli-versions"
-      echo "Checking CLI versions..."
-      echo
-      kustomize version
-      kubeconform -v
-      flux -v
-      echo "::endgroup::"
-      echo
+    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+    with:
+      path: "~/.local/validate-kubernetes-manifests/bin"
+      key: dependencies-${{ steps.cache-key.outputs.monthly_cache_key }}
 
   - name: Run validation
     if: steps.final-list.outputs.kustomizations != '[]'
+    env:
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      KUBECONFORM_VERSION: "v0.7.0"
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
+      KUSTOMIZE_VERSION: "v5.7.1"
+      # renovate: datasource=github-releases depName=fluxcd/flux2
+      FLUX_VERSION: "v2.6.4"
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
+      echo "Running validation..."
       mapfile -t FILES < <(echo '${{ steps.final-list.outputs.kustomizations }}' | jq -r '.[]')
-      ${{ github.action_path }}/validate-k8s.sh \
+      ${{ github.action_path }}/scripts/validate-k8s.sh \
         --github-mode \
         --flux-version "${{ inputs.flux-version }}" \
         --pkg-include '${{ inputs.pkg-include }}' \
