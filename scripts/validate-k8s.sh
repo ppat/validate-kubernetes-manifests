@@ -37,31 +37,35 @@ EOF
 }
 
 # Defaults
-FLUX_VERSION="2.6.2"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
+export SCHEMA_DIR="${HOME}/.cache/kubeconform-schemas"
+
+export DEBUG=false
+export FLUX_VERSION=""
+export KUBECONFORM_FLAGS="-skip=Secret"
+export KUSTOMIZE_FLAGS="--load-restrictor=LoadRestrictionsNone"
+export MODE='none'
 INCLUDE_JSON='["."]'
 EXCLUDE_JSON='[]'
-KUBECONFORM_FLAGS="-skip=Secret"
-KUSTOMIZE_FLAGS="--load-restrictor=LoadRestrictionsNone"
 ENV_FILE=""
 BASE_KFILE=""
-DEBUG=false
-MODE='none'
 
 # Parse options
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
+  # exported variables even if not referrenced within this script, they maybe used by subscripts (even if not explicitly passed)
   case $1 in
-    --flux-version)            FLUX_VERSION=$2;       shift 2;;
-    --pkg-include)             INCLUDE_JSON=$2;       shift 2;;
-    --pkg-exclude)             EXCLUDE_JSON=$2;       shift 2;;
-    --kubeconform-flags)       KUBECONFORM_FLAGS=$2;  shift 2;;
-    --kustomize-flags)         KUSTOMIZE_FLAGS=$2;    shift 2;;
-    --env-file)                ENV_FILE=$2;           shift 2;;
-    --base-kustomization-file) BASE_KFILE=$2;         shift 2;;
-    --github-mode)             MODE='github';         shift;;
-    --debug)                   DEBUG=true;            shift;;
+    --flux-version)            export FLUX_VERSION=$2;          shift 2;;
+    --pkg-include)             INCLUDE_JSON=$2;                 shift 2;;
+    --pkg-exclude)             EXCLUDE_JSON=$2;                 shift 2;;
+    --kubeconform-flags)       export KUBECONFORM_FLAGS=$2;     shift 2;;
+    --kustomize-flags)         export KUSTOMIZE_FLAGS=$2;       shift 2;;
+    --env-file)                ENV_FILE=$2;                     shift 2;;
+    --base-kustomization-file) BASE_KFILE=$2;                   shift 2;;
+    --github-mode)             export MODE='github';            shift;;
+    --debug)                   export DEBUG=true;               shift;;
     -h|--help)                 usage;;
-    *)                         POSITIONAL+=("$1");    shift;;
+    *)                         POSITIONAL+=("$1");              shift;;
   esac
 done
 set -- "${POSITIONAL[@]}"
@@ -127,54 +131,18 @@ if (( ${#PKG_DIRS[@]} > 0 )); then
   readarray -t PKG_DIRS < <(printf '%s\n' "${PKG_DIRS[@]}" | sort -u)
 fi
 
-# Schema cache paths
-SCHEMA_DIR="${HOME}/.cache/kubeconform-schemas"
-FLUX_SCHEMA_DIR="${SCHEMA_DIR}/flux-crd-schemas"
-KUBECONFORM_SCHEMA_DIR="${SCHEMA_DIR}/kubernetes-json-schema"
-DATREE_SCHEMA_DIR="${SCHEMA_DIR}/datreeio-CRDs-catalog"
-KUBECONFORM_SCHEMA="${KUBECONFORM_SCHEMA_DIR}/master-standalone-strict/{{.ResourceKind}}{{.KindSuffix}}.json"
-DATREE_SCHEMA="${DATREE_SCHEMA_DIR}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
-
-
-fetch_schemas() {
-  echo "⬇️  Downloading default schemas..."
-  git clone --filter=blob:none --sparse https://github.com/yannh/kubernetes-json-schema "${KUBECONFORM_SCHEMA_DIR}" 2>&1 | sed -E 's|^(.*)|    \1|g'
-  pushd "${KUBECONFORM_SCHEMA_DIR}" >/dev/null 2>&1
-  git sparse-checkout set master-standalone-strict 2>&1 | sed -E 's|^(.*)|    \1|g'
-  popd >/dev/null 2>&1
-  echo "-> Saved schemas to ${KUBECONFORM_SCHEMA_DIR}"
-  echo
-
-  echo "⬇️  Downloading Flux CRD schemas..."
-  local tag="$FLUX_VERSION"
-  [[ "$tag" != v* ]] && tag="v$tag"
-  mkdir -p "$FLUX_SCHEMA_DIR/master-standalone-strict"
-  wget --progress=dot:giga -c "https://github.com/fluxcd/flux2/releases/download/${tag}/crd-schemas.tar.gz" -O /tmp/crd-schemas.tar.gz 2>&1 | sed -E 's|^(.*)|    \1|g'
-  pushd "${FLUX_SCHEMA_DIR}/master-standalone-strict" >/dev/null 2>&1
-  tar -xzf /tmp/crd-schemas.tar.gz
-  popd >/dev/null 2>&1
-  echo "-> Saved schemas to ${FLUX_SCHEMA_DIR}"
-  echo
-
-  echo "⬇️  Downloading Datree CRD schemas..."
-  git clone https://github.com/datreeio/CRDs-catalog "${DATREE_SCHEMA_DIR}" 2>&1 | sed -E 's|^(.*)|    \1|g'
-  echo "-> Saved schemas to ${DATREE_SCHEMA_DIR}"
-  echo
-}
 
 validate_pre() {
-  local base_flags=( -strict -ignore-missing-schemas -verbose )
-  local schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
+  [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations" || true
   for file in "${PRE_FILES[@]}"; do
     [[ -f "$file" ]] || { echo "✖ Missing file: $file"; exit 1; }
-    kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "$file" 2>&1 | sed -E 's|^(.*)|    \1|g'
+    "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS}" "${file}" 2>&1
   done
+  [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
 }
 
 validate_post() {
-  local base_flags=( -strict -ignore-missing-schemas -verbose -output json -summary )
-  local schema_flags=( -schema-location "$KUBECONFORM_SCHEMA" -schema-location "$FLUX_SCHEMA_DIR" -schema-location "$DATREE_SCHEMA" )
-
+  [[ "$MODE" == "github" ]] && echo "::group::validate-resources" || true
   # shellcheck disable=SC2155
   local repo_dir="$(pwd)" temp_dir="$(mktemp -d)" env_before_file="$(mktemp)" env_after_file="$(mktemp)"
   local results_dir="${temp_dir}/results"
@@ -196,7 +164,7 @@ validate_post() {
         echo "$diff_output" | grep '^>' | sed 's/^> //'
       fi
       echo " "
-    fi | sed -E 's|^(.*)|     \1|g'
+    fi | sed -E 's|^|    |g'
   fi
 
   pushd "${temp_dir}" >/dev/null 2>&1
@@ -220,7 +188,7 @@ validate_post() {
     $DEBUG && >&2 echo "${pkg_dir}: building kustomization..."
     kustomize build . "$KUSTOMIZE_FLAGS" | flux envsubst > "${built_kustomization}"
     $DEBUG && >&2 echo "${pkg_dir}: validating built kustomization..."
-    if ! (kubeconform "$KUBECONFORM_FLAGS" "${base_flags[@]}" "${schema_flags[@]}" "${built_kustomization}" > "${result_file}"); then
+    if ! "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS} -summary" -f json -o "${result_file}" "${built_kustomization}"; then
       $DEBUG && >&2 echo "${pkg_dir}: kubeconform failed!"
     fi
 
@@ -266,43 +234,34 @@ validate_post() {
 
   if (( invalid_count > 0 || error_count > 0 )); then
     >&2 echo "Found ${invalid_count} invalid resources and ${error_count} processing errors."
+    [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
     return 1
   fi
+  [[ "$MODE" == "github" ]] && echo "::endgroup::" || true
   return 0
 }
 
 main() {
-  if [[ ! -d "${FLUX_SCHEMA_DIR}" || ! -d "${KUBECONFORM_SCHEMA_DIR}" || ! -d "${DATREE_SCHEMA_DIR}" ]]; then
-    [[ "$MODE" == "github" ]] && echo "::group::fetch-schemas"
-    fetch_schemas
-    [[ "$MODE" == "github" ]] && echo "::endgroup::"
-  else
-    echo "Using cached schemas..."
-  fi
-
+  "${SCRIPT_DIR}"/fetch-schemas.sh "${SCHEMA_DIR}"
   if (( ${#PRE_FILES[@]} > 0 )); then
     echo "🧪 Pre-build validation (kustomization files only)..."
-    [[ "$MODE" == "github" ]] && echo "::group::validate-kustomizations"
-    validate_pre
-    [[ "$MODE" == "github" ]] && echo "::endgroup::"
+    validate_pre | sed -E 's|^|    |g'
     echo "✅ Pre-build OK"
   else
-    echo "⚠️  Skipping pre-build (no kustomization.yaml files)"
+    echo "⚠️ Skipping pre-build (no kustomization.yaml files)"
   fi
   echo
 
   if (( ${#PKG_DIRS[@]} > 0 )); then
     echo "🧪 Post-build validation (resources packaged within each kustomization)..."
-    [[ "$MODE" == "github" ]] && echo "::group::validate-resources"
-    if validate_post; then
-      [[ "$MODE" == "github" ]] && echo "::endgroup::"
+    if validate_post | sed -E 's|^|    |g'; then
       echo "✅ Post-build OK"
     else
       echo "❌ Validation failed"
       exit 1
     fi
   else
-    echo "⚠️  Skipping post-build (no kustomization package dirs)"
+    echo "⚠️ Skipping post-build (no kustomization package dirs)"
   fi
   echo
 }
