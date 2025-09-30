@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.5...v0.1.6) (2025-09-30)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update ppat/renovate-presets (v0.0.3 -&gt; v0.0.4) ([#39](https://github.com/ppat/validate-kubernetes-manifests/issues/39)) ([79ee190](https://github.com/ppat/validate-kubernetes-manifests/commit/79ee1907d7ac0cb1ba545a500ec9ab244ff309b7))
+
 ## [0.1.5](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.4...v0.1.5) (2025-08-05)
 
 
