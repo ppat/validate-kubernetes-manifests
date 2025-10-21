@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.6](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.5...v0.1.6) (2025-10-21)
+
+
+### ✨ Features
+
+* update fluxcd/flux2 (v2.6.4 -&gt; v2.7.0) ([#45](https://github.com/ppat/validate-kubernetes-manifests/issues/45)) ([96a9654](https://github.com/ppat/validate-kubernetes-manifests/commit/96a96541b4a330e6af7a4e7ec84319ee42087a71))
+* update ppat/renovate-presets (v0.0.4 -&gt; v0.1.0) ([#49](https://github.com/ppat/validate-kubernetes-manifests/issues/49)) ([688b3c7](https://github.com/ppat/validate-kubernetes-manifests/commit/688b3c7978cc643676d4aab6c2d752b672f9e26c))
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update fluxcd/flux2 (v2.7.0 -&gt; v2.7.2) ([#46](https://github.com/ppat/validate-kubernetes-manifests/issues/46)) ([ef41951](https://github.com/ppat/validate-kubernetes-manifests/commit/ef419510d1d9d6f135397770f7e0beff77027800))
+* update ppat/renovate-presets (v0.0.3 -&gt; v0.0.4) ([#39](https://github.com/ppat/validate-kubernetes-manifests/issues/39)) ([79ee190](https://github.com/ppat/validate-kubernetes-manifests/commit/79ee1907d7ac0cb1ba545a500ec9ab244ff309b7))
+
 ## [0.1.5](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.4...v0.1.5) (2025-08-05)
 
 
