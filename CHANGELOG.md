@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.6...v0.1.7) (2025-11-01)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update fluxcd/flux2 (v2.7.2 -&gt; v2.7.3) ([#51](https://github.com/ppat/validate-kubernetes-manifests/issues/51)) ([1f98987](https://github.com/ppat/validate-kubernetes-manifests/commit/1f98987d94c9eb465cdf061ac22bacca5d9fa416))
+
 ## [0.1.6](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.5...v0.1.6) (2025-10-21)
 
 
