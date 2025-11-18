@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.7...v0.1.8) (2025-11-18)
+
+
+### ✨ Features
+
+* update kubernetes-sigs/kustomize (v5.7.1 -&gt; v5.8.0) ([#54](https://github.com/ppat/validate-kubernetes-manifests/issues/54)) ([e02bb9b](https://github.com/ppat/validate-kubernetes-manifests/commit/e02bb9b6b99005edcbe5a42192f8b6b26fd1531b))
+
 ## [0.1.7](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.6...v0.1.7) (2025-11-01)
 
 
