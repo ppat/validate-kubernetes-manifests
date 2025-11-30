@@ -163,7 +163,7 @@ runs:
       # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize extractVersion=^kustomize/(?<version>.*)$
       KUSTOMIZE_VERSION: "v5.8.0"
       # renovate: datasource=github-releases depName=fluxcd/flux2
-      FLUX_VERSION: "v2.7.4"
+      FLUX_VERSION: "v2.7.5"
     shell: bash
     # yamllint disable-line rule:indentation
     run: |
