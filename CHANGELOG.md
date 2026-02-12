@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.8...v0.1.9) (2026-02-12)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update kubernetes-sigs/kustomize (v5.8.0 -&gt; v5.8.1) ([#67](https://github.com/ppat/validate-kubernetes-manifests/issues/67)) ([8bbfd9a](https://github.com/ppat/validate-kubernetes-manifests/commit/8bbfd9abcb482510352ab2746fe1f765d0f83a20))
+
 ## [0.1.8](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.7...v0.1.8) (2025-12-16)
 
 
