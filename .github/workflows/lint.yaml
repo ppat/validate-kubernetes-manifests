@@ -23,7 +23,6 @@ jobs:
       files_yaml: |
         actions:
         - .github/workflows/**
-        - '**.yml'
         markdown:
         - '**.md'
         - '!**/CHANGELOG.md'
@@ -34,6 +33,9 @@ jobs:
         - '**.sh'
         yaml:
         - '**.yaml'
+        - '**.yml'
+        zizmor:
+        - .github/workflows/**
         - '**.yml'
       git_ref: ${{ github.head_ref || github.ref }}
 
@@ -93,7 +95,7 @@ jobs:
 
   zizmor:
     needs: [detect-changes]
-    if: ${{ github.event_name != 'pull_request' || fromJSON(needs.detect-changes.outputs.results).actions_any_changed == 'true' }}
+    if: ${{ github.event_name != 'pull_request' || fromJSON(needs.detect-changes.outputs.results).zizmor_any_changed == 'true' }}
     uses: ppat/github-workflows/.github/workflows/lint-zizmor.yaml@d8be434313cb0ee0a3b27777b969760cb48b1aa7 # v4.0.0
     with:
       git_ref: ${{ github.head_ref || github.ref }}
