@@ -30,6 +30,10 @@ install_from_github_release_asset() {
   local asset_pattern="$3"
   local dest_dir="$4"
   local executable="$5"
+  # Name of the extracted binary inside the tarball, when it differs from the
+  # final installed executable name (e.g. yq's asset extracts to
+  # `yq_linux_amd64`, not `yq`). Defaults to `executable`.
+  local extracted_name="${6:-$executable}"
   local url
   local asset
   if [[ -f "${dest_dir}/${executable}" ]]; then
@@ -45,7 +49,7 @@ install_from_github_release_asset() {
   curl ${CURL_FLAGS} -o "${TEMP_DIR}/${asset}" "${url}" 2>&1 | sed -E 's|^|    |g'
   cd "${TEMP_DIR}/"
   tar -xzf "${asset}"
-  mv "${executable}" "${dest_dir}/${executable}"
+  mv "${extracted_name}" "${dest_dir}/${executable}"
   chown "${USER}" "${dest_dir}/${executable}"
   chmod 755 "${dest_dir}/${executable}"
   echo "-> ${dest_dir}/${executable}"
@@ -65,6 +69,9 @@ install_dependencies() {
   echo
   echo "Installing kustomize..."
   install_from_github_release_asset kubernetes-sigs/kustomize "kustomize/${KUSTOMIZE_VERSION:-".*"}" 'kustomize_.*_linux_amd64\.tar\.gz' "${dest_dir}" kustomize | sed -E 's|^|    |g'
+  echo
+  echo "Installing yq..."
+  install_from_github_release_asset mikefarah/yq "${YQ_VERSION:-".*"}" 'yq_linux_amd64\.tar\.gz' "${dest_dir}" yq yq_linux_amd64 | sed -E 's|^|    |g'
 }
 
 show_versions() {
@@ -72,6 +79,7 @@ show_versions() {
   kustomize version | sed -E 's|^|    |g'
   kubeconform -v | sed -E 's|^|    |g'
   flux -v | sed -E 's|^|    |g'
+  yq --version | sed -E 's|^|    |g'
 }
 
 main() {

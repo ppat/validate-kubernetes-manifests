@@ -6,6 +6,7 @@ on:
     paths:
     - '.github/workflows/test-action.yaml'
     - 'action.yml'
+    - 'ci/negative-test-data/*'
     - 'ci/test-data/*'
     - 'ci/validation/*'
     - 'scripts/*.sh'
@@ -27,7 +28,7 @@ jobs:
       uses: ./
       with:
         # yamllint disable rule:line-length
-        files: '["ci/test-data/test-package/nginx-deployment.yaml", "ci/test-data/test-package/nginx-ingress.yaml", "ci/test-data/test-package/nginx-service.yaml", "ci/test-data/kustomization.yaml"]'
+        files: '["ci/test-data/test-package/nginx-deployment.yaml", "ci/test-data/test-package/nginx-ingress.yaml", "ci/test-data/test-package/nginx-service.yaml", "ci/test-data/substitute-disabled/configmap-literal.yaml", "ci/test-data/substitute-disabled/deployment-substituted.yaml", "ci/test-data/kustomization.yaml"]'
         pkg-include: '["ci/test-data/*"]'
         pkg-exclude: '[]'
         env-file: 'ci/validation/.env'
@@ -45,8 +46,34 @@ jobs:
     - name: Test - Explicit List of Kustomizations
       uses: ./
       with:
-        files: '["ci/test-data/test-package/kustomization.yaml", "ci/test-data/kustomization.yaml"]'
+        # yamllint disable-line rule:line-length
+        files: '["ci/test-data/test-package/kustomization.yaml", "ci/test-data/substitute-disabled/kustomization.yaml", "ci/test-data/kustomization.yaml"]'
         pkg-include: '["ci/test-data/*"]'
         pkg-exclude: '[]'
         env-file: 'ci/validation/.env'
         debug: 'false'
+
+    # `ci/test-data/substitute-disabled/configmap-literal.yaml` (validated above) is annotated
+    # `kustomize.toolkit.fluxcd.io/substitute: disabled` and ships literal `${arr[@]}`-shaped text
+    # that would make `flux envsubst` fail outright if it weren't skipped for that resource — so
+    # the passing runs above already prove the annotation prevents that crash, and that the
+    # sibling `deployment-substituted.yaml` (no annotation) still gets real `${VAR}` substitution
+    # in the same build. This step is the negative control: it proves kubeconform still validates
+    # an annotated resource's schema rather than the annotation silently skipping validation too.
+    - name: Test - Annotated resource with invalid schema is still caught by kubeconform
+      id: negative-substitute-disabled
+      continue-on-error: true
+      uses: ./
+      with:
+        files: '["ci/negative-test-data/substitute-disabled-invalid/kustomization.yaml"]'
+        pkg-include: '["ci/negative-test-data/*"]'
+        pkg-exclude: '[]'
+        debug: 'false'
+
+    - name: Assert - previous step failed as expected
+      if: steps.negative-substitute-disabled.outcome != 'failure'
+      run: |
+        echo "::error::Expected 'Annotated resource with invalid schema' step to fail (kubeconform"
+        echo "::error::should still validate substitute:disabled resources), but its outcome was:"
+        echo "::error::'${{ steps.negative-substitute-disabled.outcome }}'"
+        exit 1

@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: literal-script
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  entrypoint.sh: |
+    #!/usr/bin/env bash
+    arr=("a" "b" "c")
+    echo "${arr[@]}"
+    echo "not a real flux var: ${NAMESPACE}"

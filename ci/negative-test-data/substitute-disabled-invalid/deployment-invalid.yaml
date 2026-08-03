@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invalid-schema
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+spec:
+  replicas: "not-a-number"
+  selector:
+    matchLabels:
+      app: invalid-schema
+  template:
+    metadata:
+      labels:
+        app: invalid-schema
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        command: ["sh", "-c", "echo ${arr[@]}"]
