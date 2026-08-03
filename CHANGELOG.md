@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.11](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.10...v0.1.11) (2026-08-03)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* run flux envsubst per-document to avoid literal ${...} text breaking builds ([#100](https://github.com/ppat/validate-kubernetes-manifests/issues/100)) ([379181a](https://github.com/ppat/validate-kubernetes-manifests/commit/379181ad095c66c1b7c193262eb8c3d49e87f80a))
+* update fluxcd/flux2 (v2.9.2 -&gt; v2.9.3) ([#96](https://github.com/ppat/validate-kubernetes-manifests/issues/96)) ([9fa7006](https://github.com/ppat/validate-kubernetes-manifests/commit/9fa70066c0e0ddd39a60ac284ccc33dc2b3c3767))
+
 ## [0.1.10](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.9...v0.1.10) (2026-07-16)
 
 
