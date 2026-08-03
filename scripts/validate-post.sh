@@ -80,6 +80,39 @@ aggregate_results() {
   cat "${results_dir}/aggregated.json"
 }
 
+FLUX_SUBSTITUTE_ANNOTATION='kustomize.toolkit.fluxcd.io/substitute'
+
+# Splits a multi-document YAML stream and runs `flux envsubst` on every document except
+# those annotated `kustomize.toolkit.fluxcd.io/substitute: disabled` — mirroring how the
+# real Flux kustomize-controller performs postBuild substitution per-resource rather than
+# on the raw build output as a whole.
+#
+# `flux envsubst` itself has no annotation awareness: it is a plain-text substitution pass,
+# so piping an annotated document (e.g. a ConfigMap shipping a bash script) through it
+# anyway corrupts or outright breaks on bash-specific parameter-expansion syntax that isn't
+# valid Flux postBuild substitution syntax but is valid, deliberately-preserved shell (array
+# subscripts `${arr[@]}`, nested expansions `${a%"${b}"}`, etc.).
+substitute_build() {
+  local input_file=$1
+  local split_dir
+  split_dir=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap "rm -rf ${split_dir}" RETURN
+
+  yq -s "\"${split_dir}/doc_\" + (\$index | tostring)" "$input_file" >/dev/null
+
+  local doc substitute_disabled
+  for doc in $(find "${split_dir}" -name 'doc_*.yml' | sort -V); do
+    substitute_disabled=$(yq ".metadata.annotations.\"${FLUX_SUBSTITUTE_ANNOTATION}\" // \"\"" "$doc")
+    if [[ "$substitute_disabled" == "disabled" ]]; then
+      cat "$doc"
+    else
+      flux envsubst < "$doc"
+    fi
+    echo "---"
+  done
+}
+
 validate_post() {
   local dirs=("$@")
 
@@ -126,7 +159,9 @@ validate_post() {
     local output_file="${results_dir}/output_${i}.json"
 
     $DEBUG && >&2 echo "${pkg_dir}: building kustomization..."
-    kustomize build . "$KUSTOMIZE_FLAGS" | flux envsubst > "${built_kustomization}"
+    local built_raw="${temp_dir}/build_raw_${i}.yaml"
+    kustomize build . "$KUSTOMIZE_FLAGS" > "${built_raw}"
+    substitute_build "${built_raw}" > "${built_kustomization}"
     $DEBUG && >&2 echo "${pkg_dir}: validating built kustomization..."
     if ! "${SCRIPT_DIR}"/run-kubeconform.sh -c "${KUBECONFORM_FLAGS} -summary" -f json -o "${result_file}" "${built_kustomization}"; then
       $DEBUG && >&2 echo "${pkg_dir}: kubeconform failed!"

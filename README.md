@@ -77,7 +77,7 @@ repos:
 ## Configuration Options
 
 | Parameter | Description | Default | Example |
-|-----------|-------------|---------|---------|
+| ----------- | ------------- | --------- | --------- |
 | `files` | JSON array of file paths (Action only) | `[]` | `["apps/media/plex/kustomization.yaml"]` |
 | `pkg-include` | Glob patterns for including directories | `["."]` | `["apps/*"]` |
 | `pkg-exclude` | Glob patterns for excluding directories | `[]` | `["test/*"]` |
@@ -230,6 +230,26 @@ spec:
   replicas: 3
 ```
 
+**Excluding a resource from substitution**:
+
+`flux envsubst` is a plain-text pass over the whole document — it can't tell a real `${VAR_NAME}` placeholder from literal `${...}`-shaped text that happens to live in a field (e.g. a CRD schema description, or a ConfigMap shipping a script that legitimately uses `${arr[@]}`-style shell expansion). Substitution is applied per-resource, so annotate any resource that must keep its `${...}` text literal with `kustomize.toolkit.fluxcd.io/substitute: disabled` — the same annotation [Flux's kustomize-controller honors](https://fluxcd.io/flux/components/kustomize/kustomizations/#post-build-variable-substitution) to opt a resource out of postBuild substitution:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: entrypoint-script
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+data:
+  entrypoint.sh: |
+    #!/usr/bin/env bash
+    arr=("a" "b" "c")
+    echo "${arr[@]}"  # left untouched, would otherwise break envsubst
+```
+
+Resources without the annotation are substituted as normal, and kubeconform still validates every resource regardless of the annotation.
+
 ### Repository-wide Validation
 
 Pass `.` as the file argument to validate all `kustomization.yaml` files recursively:
@@ -250,6 +270,7 @@ The script requires these tools to be available. While they are automatically in
 - `kubeconform` - Kubernetes manifest validation
 - `kustomize` - Kubernetes native configuration management
 - `flux` - GitOps toolkit CLI
+- `yq` - YAML processor (used to split multi-document build output for per-document postBuild substitution)
 - `jq` - JSON processor
 - `wget` - File downloader
 
