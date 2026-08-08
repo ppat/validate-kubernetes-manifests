@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.11...v0.1.12) (2026-08-08)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update fluxcd/flux2 (v2.9.3 -&gt; v2.9.4) ([#101](https://github.com/ppat/validate-kubernetes-manifests/issues/101)) ([4890760](https://github.com/ppat/validate-kubernetes-manifests/commit/4890760e36fb676965eb533d3672c89afd91431c))
+
 ## [0.1.11](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.10...v0.1.11) (2026-08-03)
 
 
