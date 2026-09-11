@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.13](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.12...v0.1.13) (2026-09-11)
+
+
+### ✨ Features
+
+* update ppat/renovate-presets (v0.2.1 -&gt; v0.3.0) ([#110](https://github.com/ppat/validate-kubernetes-manifests/issues/110)) ([6c0006b](https://github.com/ppat/validate-kubernetes-manifests/commit/6c0006b9d63930cb969d101d59ec3b0188f4f790))
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* **github-actions:** pass GitHub App client IDs ([#116](https://github.com/ppat/validate-kubernetes-manifests/issues/116)) ([bb72c33](https://github.com/ppat/validate-kubernetes-manifests/commit/bb72c33aa416812aa810ddaf438f1402c58d7839))
+* update fluxcd/flux2 (v2.9.4 -&gt; v2.9.5) ([#111](https://github.com/ppat/validate-kubernetes-manifests/issues/111)) ([baa4f4d](https://github.com/ppat/validate-kubernetes-manifests/commit/baa4f4d4f3be5749cf68082fbfe1c6bf07dad703))
+* update mikefarah/yq (v4.53.3 -&gt; v4.53.6) ([#107](https://github.com/ppat/validate-kubernetes-manifests/issues/107)) ([7a2a545](https://github.com/ppat/validate-kubernetes-manifests/commit/7a2a545345bea62cea6cfd4b86f309a17d056138))
+
 ## [0.1.12](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.11...v0.1.12) (2026-08-08)
 
 
