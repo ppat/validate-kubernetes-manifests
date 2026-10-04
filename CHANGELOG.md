@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.14](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.13...v0.1.14) (2026-10-04)
+
+
+### 🚀 Enhancements + Bug Fixes
+
+* update fluxcd/flux2 (v2.9.5 -&gt; v2.9.6) ([#122](https://github.com/ppat/validate-kubernetes-manifests/issues/122)) ([70710de](https://github.com/ppat/validate-kubernetes-manifests/commit/70710def4e56c9cd26bac4fa42be2b0e21fb62bc))
+* update kubernetes-sigs/kustomize (v5.8.1 -&gt; v5.8.2) ([#121](https://github.com/ppat/validate-kubernetes-manifests/issues/121)) ([aa50557](https://github.com/ppat/validate-kubernetes-manifests/commit/aa50557b356c63f65740bcfbb09ab9413f630c10))
+
 ## [0.1.13](https://github.com/ppat/validate-kubernetes-manifests/compare/v0.1.12...v0.1.13) (2026-09-11)
 
 
