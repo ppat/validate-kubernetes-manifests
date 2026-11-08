@@ -165,7 +165,7 @@ runs:
       # renovate: datasource=github-releases depName=fluxcd/flux2
       FLUX_VERSION: "v2.10.0"
       # renovate: datasource=github-releases depName=mikefarah/yq
-      YQ_VERSION: "v4.54.1"
+      YQ_VERSION: "v4.54.2"
       # INPUTS
       BASE_KUSTOMIZATION_FILE: ${{ inputs.base-kustomization-file }}
       DEBUG_ENABLED: ${{ inputs.debug }}
